@@ -1,0 +1,174 @@
+version: '3.8'
+
+services:
+  # PostgreSQL数据库
+  postgres:
+    image: postgres:15-alpine
+    container_name: pdf-postgres
+    environment:
+      POSTGRES_DB: pdfapp
+      POSTGRES_USER: pdfuser
+      POSTGRES_PASSWORD: pdfpassword
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: unless-stopped
+    networks:
+      - pdf-network
+
+  # Redis缓存
+  redis:
+    image: redis:7-alpine
+    container_name: pdf-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    networks:
+      - pdf-network
+
+  # 后端应用
+  pdf-backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: pdf-backend
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=pdfapp
+      - DB_USER=pdfuser
+      - DB_PASSWORD=pdfpassword
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - JWT_SECRET=your-super-secret-jwt-key-change-in-production
+      - UPLOAD_PATH=/app/uploads
+      - MAX_FILE_SIZE=100MB
+      - TESSERACT_PATH=/usr/bin/tesseract
+      - OCR_LANGUAGES=eng,chi_sim
+    ports:
+      - "8080:8080"
+    volumes:
+      - upload_data:/app/uploads
+      - temp_data:/tmp/pdf-processing
+    depends_on:
+      - postgres
+      - redis
+    restart: unless-stopped
+    networks:
+      - pdf-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # 前端应用
+  pdf-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: pdf-frontend
+    environment:
+      - VITE_API_BASE_URL=http://localhost:8080
+    ports:
+      - "3000:80"
+    depends_on:
+      - pdf-backend
+    restart: unless-stopped
+    networks:
+      - pdf-network
+
+  # Nginx反向代理
+  nginx:
+    image: nginx:alpine
+    container_name: pdf-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/ssl:/etc/nginx/ssl
+    depends_on:
+      - pdf-backend
+      - pdf-frontend
+    restart: unless-stopped
+    networks:
+      - pdf-network
+
+  # 文件存储服务 (MinIO)
+  minio:
+    image: minio/minio:latest
+    container_name: pdf-minio
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin123
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    restart: unless-stopped
+    networks:
+      - pdf-network
+
+  # 监控服务 (可选)
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: pdf-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+    restart: unless-stopped
+    networks:
+      - pdf-network
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: pdf-grafana
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin123
+    ports:
+      - "3001:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana:/etc/grafana/provisioning
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+    networks:
+      - pdf-network
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  upload_data:
+    driver: local
+  temp_data:
+    driver: local
+  minio_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+
+networks:
+  pdf-network:
+    driver: bridge 

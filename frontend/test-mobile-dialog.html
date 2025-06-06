@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>移动端弹窗测试</title>
+  <!-- Element Plus CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/element-plus/dist/index.css">
+  <style>
+    /* 移动端弹窗样式强制覆盖 */
+    @media (max-width: 768px) {
+      body .el-dialog,
+      html .el-dialog,
+      .el-overlay .el-overlay-dialog .el-dialog {
+        margin: 5vh auto !important;
+        width: calc(100vw - 16px) !important;
+        max-width: calc(100vw - 16px) !important;
+        min-width: auto !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        position: fixed !important;
+      }
+      
+      .el-dialog__header {
+        padding: 12px 16px 8px !important;
+        border-radius: 12px 12px 0 0 !important;
+      }
+      
+      .el-dialog__body {
+        padding: 8px 16px !important;
+        max-height: calc(90vh - 120px) !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+      }
+      
+      .el-dialog__footer {
+        padding: 8px 16px 16px !important;
+        border-radius: 0 0 12px 12px !important;
+      }
+    }
+
+    @media (max-width: 414px) {
+      body .el-dialog,
+      html .el-dialog,
+      .el-overlay .el-overlay-dialog .el-dialog {
+        margin: 2vh auto !important;
+        width: calc(100vw - 8px) !important;
+        max-width: calc(100vw - 8px) !important;
+        min-width: auto !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        position: fixed !important;
+      }
+      
+      .el-dialog__header {
+        padding: 8px 12px 6px !important;
+        border-radius: 8px 8px 0 0 !important;
+      }
+      
+      .el-dialog__body {
+        padding: 6px 12px !important;
+        max-height: calc(95vh - 100px) !important;
+      }
+      
+      .el-dialog__footer {
+        padding: 6px 12px 12px !important;
+        border-radius: 0 0 8px 8px !important;
+      }
+    }
+
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+    }
+
+    .test-container {
+      max-width: 400px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+
+    .test-button {
+      width: 100%;
+      height: 50px;
+      margin: 10px 0;
+      background: #007AFF;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .test-button:hover {
+      background: #0056b3;
+      transform: translateY(-2px);
+    }
+
+    .info {
+      background: #f5f5f5;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .current-width {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background: rgba(0,0,0,0.8);
+      color: white;
+      padding: 5px 10px;
+      border-radius: 5px;
+      font-size: 12px;
+      z-index: 9999;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="current-width">屏幕宽度: {{ screenWidth }}px</div>
+    
+    <div class="test-container">
+      <h1 style="text-align: center; color: #333; margin-bottom: 30px;">移动端弹窗测试</h1>
+      
+      <div class="info">
+        <strong>测试说明：</strong><br>
+        • 在移动设备上查看弹窗是否占满屏幕宽度<br>
+        • 检查弹窗边距和内边距是否适配移动端<br>
+        • 测试不同屏幕尺寸下的表现
+      </div>
+
+      <button class="test-button" @click="showSimpleDialog">简单弹窗测试</button>
+      <button class="test-button" @click="showContentDialog">内容弹窗测试</button>
+      <button class="test-button" @click="showFormDialog">表单弹窗测试</button>
+      <button class="test-button" @click="showLongContentDialog">长内容弹窗测试</button>
+    </div>
+
+    <!-- 简单弹窗 -->
+    <el-dialog
+      v-model="simpleVisible"
+      title="简单弹窗"
+      width="90%"
+    >
+      <p>这是一个简单的测试弹窗，用来验证移动端样式是否正确应用。</p>
+      <template #footer>
+        <el-button @click="simpleVisible = false">关闭</el-button>
+        <el-button type="primary" @click="simpleVisible = false">确定</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 内容弹窗 -->
+    <el-dialog
+      v-model="contentVisible"
+      title="内容弹窗测试"
+      width="85%"
+    >
+      <div style="padding: 10px;">
+        <h3>工具功能</h3>
+        <p>这是一个功能更丰富的弹窗，包含更多内容和交互元素。</p>
+        <el-form label-width="80px">
+          <el-form-item label="文件类型">
+            <el-select v-model="testValue" placeholder="请选择">
+              <el-option label="PDF" value="pdf"></el-option>
+              <el-option label="图片" value="image"></el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="质量">
+            <el-radio-group v-model="testRadio">
+              <el-radio label="high">高质量(质量高文件可能变大)</el-radio>
+              <el-radio label="medium">中等质量</el-radio>
+            </el-radio-group>
+          </el-form-item>
+        </el-form>
+      </div>
+      <template #footer>
+        <el-button @click="contentVisible = false">取消</el-button>
+        <el-button type="primary" @click="contentVisible = false">开始处理</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 表单弹窗 -->
+    <el-dialog
+      v-model="formVisible"
+      title="表单弹窗测试"
+      width="80%"
+    >
+      <el-form :model="form" label-width="80px">
+        <el-form-item label="文件名">
+          <el-input v-model="form.name" placeholder="请输入文件名"></el-input>
+        </el-form-item>
+        <el-form-item label="描述">
+          <el-input v-model="form.description" type="textarea" placeholder="请输入描述"></el-input>
+        </el-form-item>
+        <el-form-item label="标签">
+          <el-checkbox-group v-model="form.tags">
+            <el-checkbox label="重要">重要</el-checkbox>
+            <el-checkbox label="工作">工作</el-checkbox>
+            <el-checkbox label="个人">个人</el-checkbox>
+          </el-checkbox-group>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="formVisible = false">取消</el-button>
+        <el-button type="primary" @click="formVisible = false">保存</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 长内容弹窗 -->
+    <el-dialog
+      v-model="longContentVisible"
+      title="长内容弹窗测试"
+      width="90%"
+    >
+      <div style="max-height: 400px; overflow-y: auto; padding: 10px;">
+        <h3>PDF工具功能说明</h3>
+        <p>我们的PDF工具提供了丰富的功能来帮助您处理PDF文件：</p>
+        
+        <h4>1. PDF合并</h4>
+        <p>将多个PDF文件合并成一个文件，支持自定义页面顺序和范围选择。</p>
+        
+        <h4>2. PDF分割</h4>
+        <p>将单个PDF文件按页面范围或书签分割成多个文件。</p>
+        
+        <h4>3. PDF压缩</h4>
+        <p>减小PDF文件大小，支持多种压缩级别，在文件大小和质量之间找到平衡。</p>
+        
+        <h4>4. PDF转换</h4>
+        <p>支持PDF与Word、Excel、PowerPoint、图片等格式之间的相互转换。</p>
+        
+        <h4>5. PDF编辑</h4>
+        <p>添加水印、页眉页脚、页码等，支持文本和图片水印。</p>
+        
+        <h4>6. PDF安全</h4>
+        <p>为PDF文件添加密码保护，设置访问权限和编辑限制。</p>
+        
+        <p style="margin-top: 20px;">所有功能都针对移动端进行了优化，确保在手机和平板上都有良好的使用体验。</p>
+      </div>
+      <template #footer>
+        <el-button @click="longContentVisible = false">关闭</el-button>
+      </template>
+    </el-dialog>
+  </div>
+
+  <!-- Vue 3 和 Element Plus -->
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <script src="https://unpkg.com/element-plus"></script>
+
+  <script>
+    const { createApp, ref, computed, onMounted, onUnmounted } = Vue;
+
+    createApp({
+      setup() {
+        const simpleVisible = ref(false);
+        const contentVisible = ref(false);
+        const formVisible = ref(false);
+        const longContentVisible = ref(false);
+        const screenWidth = ref(window.innerWidth);
+        
+        const testValue = ref('');
+        const testRadio = ref('medium');
+        const form = ref({
+          name: '',
+          description: '',
+          tags: []
+        });
+
+        const updateScreenWidth = () => {
+          screenWidth.value = window.innerWidth;
+        };
+
+        const showSimpleDialog = () => {
+          simpleVisible.value = true;
+          setTimeout(applyMobileStyles, 100);
+        };
+
+        const showContentDialog = () => {
+          contentVisible.value = true;
+          setTimeout(applyMobileStyles, 100);
+        };
+
+        const showFormDialog = () => {
+          formVisible.value = true;
+          setTimeout(applyMobileStyles, 100);
+        };
+
+        const showLongContentDialog = () => {
+          longContentVisible.value = true;
+          setTimeout(applyMobileStyles, 100);
+        };
+
+        const applyMobileStyles = () => {
+          if (window.innerWidth <= 768) {
+            const dialogs = document.querySelectorAll('.el-dialog');
+            dialogs.forEach(dialog => {
+              const element = dialog;
+              if (window.innerWidth <= 414) {
+                element.style.setProperty('width', 'calc(100vw - 8px)', 'important');
+                element.style.setProperty('max-width', 'calc(100vw - 8px)', 'important');
+                element.style.setProperty('min-width', 'auto', 'important');
+                element.style.setProperty('margin', '2vh auto', 'important');
+                element.style.setProperty('left', '50%', 'important');
+                element.style.setProperty('transform', 'translateX(-50%)', 'important');
+              } else {
+                element.style.setProperty('width', 'calc(100vw - 16px)', 'important');
+                element.style.setProperty('max-width', 'calc(100vw - 16px)', 'important');
+                element.style.setProperty('min-width', 'auto', 'important');
+                element.style.setProperty('margin', '5vh auto', 'important');
+                element.style.setProperty('left', '50%', 'important');
+                element.style.setProperty('transform', 'translateX(-50%)', 'important');
+              }
+            });
+          }
+        };
+
+        onMounted(() => {
+          window.addEventListener('resize', updateScreenWidth);
+        });
+
+        onUnmounted(() => {
+          window.removeEventListener('resize', updateScreenWidth);
+        });
+
+        return {
+          simpleVisible,
+          contentVisible,
+          formVisible,
+          longContentVisible,
+          screenWidth,
+          testValue,
+          testRadio,
+          form,
+          showSimpleDialog,
+          showContentDialog,
+          showFormDialog,
+          showLongContentDialog
+        };
+      }
+    }).use(ElementPlus).mount('#app');
+  </script>
+</body>
+</html> 

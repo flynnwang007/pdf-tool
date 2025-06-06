@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  # PostgreSQL数据库
+  postgres:
+    image: postgres:15-alpine
+    container_name: pdf-postgres-dev
+    environment:
+      POSTGRES_DB: pdfapp
+      POSTGRES_USER: pdfuser
+      POSTGRES_PASSWORD: dev123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+    networks:
+      - pdf-dev-network
+
+  # Redis缓存
+  redis:
+    image: redis:7-alpine
+    container_name: pdf-redis-dev
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_dev_data:/data
+    networks:
+      - pdf-dev-network
+
+  # 文件存储服务 (MinIO) - 可选
+  minio:
+    image: minio/minio:latest
+    container_name: pdf-minio-dev
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: admin123
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_dev_data:/data
+    command: server /data --console-address ":9001"
+    networks:
+      - pdf-dev-network
+
+volumes:
+  postgres_dev_data:
+  redis_dev_data:
+  minio_dev_data:
+
+networks:
+  pdf-dev-network:
+    driver: bridge 

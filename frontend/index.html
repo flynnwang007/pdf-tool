@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <script type="module" src="/@vite/client"></script>
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="PDF工具">
+  <meta name="format-detection" content="telephone=no">
+  <title>PDF工具 - 移动端PDF处理专家</title>
+  
+  <!-- 移动端优化 -->
+  <meta name="theme-color" content="#667eea">
+  <meta name="mobile-web-app-capable" content="yes">
+  
+  <!-- 预加载关键资源 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  
+  <!-- 移动端基础样式 + Awesome设计 -->
+  <style>
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      user-select: none;
+    }
+    
+    /* 允许文本选择的元素 */
+    input, textarea, [contenteditable] {
+      -webkit-user-select: text;
+      -moz-user-select: text;
+      user-select: text;
+    }
+    
+    html {
+      height: 100%;
+      height: -webkit-fill-available;
+      font-size: 16px;
+      -webkit-text-size-adjust: 100%;
+      -ms-text-size-adjust: 100%;
+    }
+    
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      height: -webkit-fill-available;
+      font-family: 
+        -apple-system, 
+        BlinkMacSystemFont, 
+        'SF Pro Display',
+        'Helvetica Neue', 
+        'PingFang SC', 
+        'Hiragino Sans GB', 
+        'Microsoft YaHei', 
+        '微软雅黑',
+        Arial, 
+        sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #ffffff;
+      line-height: 1.5;
+      font-weight: 400;
+      overflow-x: hidden;
+    }
+    
+    #app {
+      height: 100%;
+      height: -webkit-fill-available;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    /* 移动端字体缩放 */
+    @media (max-width: 414px) {
+      html {
+        font-size: 15px;
+      }
+    }
+    
+    @media (max-width: 375px) {
+      html {
+        font-size: 14px;
+      }
+    }
+    
+    /* 横屏优化 */
+    @media (orientation: landscape) and (max-height: 600px) {
+      html {
+        font-size: 14px;
+      }
+    }
+    
+    /* 高分辨率屏幕优化 */
+    @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+      body {
+        -webkit-font-smoothing: subpixel-antialiased;
+      }
+    }
+    
+    /* 消除iOS默认样式 */
+    input[type="button"],
+    input[type="submit"],
+    input[type="reset"],
+    button {
+      -webkit-appearance: none;
+      appearance: none;
+      border-radius: 0;
+    }
+    
+    /* 优化滚动性能 */
+    * {
+      -webkit-overflow-scrolling: touch;
+    }
+    
+    /* 防止弹性滚动 */
+    body {
+      overscroll-behavior: none;
+    }
+    
+    /* Awesome加载状态 */
+    .awesome-loading-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      z-index: 9999;
+      transition: opacity 0.5s ease, visibility 0.5s ease;
+    }
+    
+    .loading-logo {
+      width: 80px;
+      height: 80px;
+      background: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 24px;
+      animation: logo-float 3s ease-in-out infinite;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    }
+    
+    .loading-logo::before {
+      content: '📄';
+      font-size: 36px;
+      filter: brightness(1.2);
+    }
+    
+    @keyframes logo-float {
+      0%, 100% { 
+        transform: translateY(0px) scale(1);
+        box-shadow: 
+          0 8px 32px rgba(0, 0, 0, 0.2),
+          inset 0 1px 0 rgba(255, 255, 255, 0.3);
+      }
+      50% { 
+        transform: translateY(-8px) scale(1.05);
+        box-shadow: 
+          0 12px 40px rgba(0, 0, 0, 0.3),
+          inset 0 1px 0 rgba(255, 255, 255, 0.4);
+      }
+    }
+    
+    .loading-title {
+      font-size: 24px;
+      font-weight: 800;
+      color: white;
+      margin-bottom: 8px;
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+      letter-spacing: -0.5px;
+    }
+    
+    .loading-subtitle {
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.8);
+      margin-bottom: 32px;
+      font-weight: 500;
+    }
+    
+    .awesome-spinner {
+      width: 48px;
+      height: 48px;
+      position: relative;
+      margin-bottom: 16px;
+    }
+    
+    .spinner-circle {
+      width: 100%;
+      height: 100%;
+      border: 3px solid rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+    
+    .spinner-circle.active {
+      border-top: 3px solid #ffffff;
+      border-right: 3px solid rgba(255, 255, 255, 0.8);
+      animation: awesome-spin 1.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
+    }
+    
+    .spinner-circle.inner {
+      width: 70%;
+      height: 70%;
+      top: 15%;
+      left: 15%;
+      border-width: 2px;
+      border-top-color: rgba(255, 255, 255, 0.6);
+      animation: awesome-spin 1s linear infinite reverse;
+    }
+    
+    @keyframes awesome-spin {
+      0% { 
+        transform: rotate(0deg);
+        border-top-color: #ffffff;
+      }
+      25% { 
+        border-top-color: rgba(255, 255, 255, 0.8);
+      }
+      50% { 
+        border-top-color: rgba(255, 255, 255, 0.6);
+      }
+      75% { 
+        border-top-color: rgba(255, 255, 255, 0.8);
+      }
+      100% { 
+        transform: rotate(360deg);
+        border-top-color: #ffffff;
+      }
+    }
+    
+    .loading-progress {
+      width: 200px;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+    
+    .progress-bar {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, #ffffff, rgba(255, 255, 255, 0.8), #ffffff);
+      background-size: 200% 100%;
+      border-radius: 2px;
+      animation: progress-shine 2s ease-in-out infinite;
+    }
+    
+    @keyframes progress-shine {
+      0% { 
+        background-position: -200% 0;
+        opacity: 0.6;
+      }
+      50% { 
+        opacity: 1;
+      }
+      100% { 
+        background-position: 200% 0;
+        opacity: 0.6;
+      }
+    }
+    
+    .loading-text {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.7);
+      font-weight: 500;
+      animation: text-pulse 2s ease-in-out infinite;
+    }
+    
+    @keyframes text-pulse {
+      0%, 100% { opacity: 0.7; }
+      50% { opacity: 1; }
+    }
+    
+    /* 加载完成后隐藏 */
+    .loaded .awesome-loading-container {
+      opacity: 0;
+      visibility: hidden;
+    }
+    
+    /* 背景装饰 */
+    .awesome-loading-container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: 
+        radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
+        radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.2) 0%, transparent 50%);
+      pointer-events: none;
+      animation: background-move 20s ease-in-out infinite;
+    }
+    
+    @keyframes background-move {
+      0%, 100% { 
+        background: 
+          radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+          radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
+          radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.2) 0%, transparent 50%);
+      }
+      50% { 
+        background: 
+          radial-gradient(circle at 80% 20%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+          radial-gradient(circle at 20% 80%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
+          radial-gradient(circle at 60% 60%, rgba(120, 219, 255, 0.2) 0%, transparent 50%);
+      }
+    }
+    
+    /* 确保加载内容在背景之上 */
+    .loading-logo,
+    .loading-title,
+    .loading-subtitle,
+    .awesome-spinner,
+    .loading-progress,
+    .loading-text {
+      position: relative;
+      z-index: 1;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <!-- Awesome加载状态 -->
+    <div class="awesome-loading-container">
+      <div class="loading-logo"></div>
+      <h1 class="loading-title">PDF工具专家</h1>
+      <p class="loading-subtitle">正在为您准备精美的体验...</p>
+      
+      <div class="awesome-spinner">
+        <div class="spinner-circle active"></div>
+        <div class="spinner-circle inner"></div>
+      </div>
+      
+      <div class="loading-progress">
+        <div class="progress-bar"></div>
+      </div>
+      
+      <div class="loading-text">加载中...</div>
+    </div>
+  </div>
+  <script type="module" src="/src/main.ts"></script>
+  
+  <script>
+    // 应用加载完成后移除loading状态
+    window.addEventListener('load', function() {
+      // 延迟移除加载画面，让用户看到完整的动画
+      setTimeout(() => {
+        document.body.classList.add('loaded');
+      }, 1500);
+    });
+    
+    // 防止双击缩放
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', function (event) {
+      const now = (new Date()).getTime();
+      if (now - lastTouchEnd <= 300) {
+        event.preventDefault();
+      }
+      lastTouchEnd = now;
+    }, false);
+    
+    // 优化移动端性能
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        // 可以在这里注册Service Worker
+        console.log('🚀 Awesome PDF Tool - PWA Ready!');
+      });
+    }
+    
+    // 动态更新加载文本
+    const loadingTexts = [
+      '正在初始化...',
+      '加载核心组件...',
+      '准备用户界面...',
+      '优化用户体验...',
+      '即将完成...'
+    ];
+    
+    let textIndex = 0;
+    const loadingTextElement = document.querySelector('.loading-text');
+    
+    const updateLoadingText = () => {
+      if (loadingTextElement && !document.body.classList.contains('loaded')) {
+        loadingTextElement.textContent = loadingTexts[textIndex];
+        textIndex = (textIndex + 1) % loadingTexts.length;
+      }
+    };
+    
+    // 每400ms更新一次加载文本
+    setInterval(updateLoadingText, 400);
+  </script>
+</body>
+</html> 

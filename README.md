@@ -1,0 +1,168 @@
+# PDF工具应用
+
+基于Stirling-PDF设计理念开发的现代化PDF处理工具，提供全面的PDF操作功能。
+
+## ✨ 功能特性
+
+- 🔄 **PDF操作**: 合并、拆分、旋转、重排页面
+- 🖼️ **格式转换**: PDF与图片、文档格式互转
+- 🔒 **安全功能**: 密码保护、权限设置、数字签名
+- 🤖 **OCR识别**: 图片文字识别转可编辑文本
+- 📁 **批量处理**: 支持多文件并行处理
+- 🎨 **水印添加**: 文字和图片水印
+- 🔍 **文档比较**: 比较PDF文档差异
+- 📊 **元数据编辑**: 修改PDF属性信息
+
+## 🏗️ 技术架构
+
+### 后端技术栈
+- **Spring Boot 3.x** - 应用框架
+- **Apache PDFBox** - PDF处理核心
+- **Spring Security** - 安全认证
+- **PostgreSQL/H2** - 数据存储
+- **Docker** - 容器化部署
+
+### 前端技术栈
+- **Vue.js 3** - 前端框架
+- **Element Plus** - UI组件库
+- **PDF.js** - PDF预览
+- **Vite** - 构建工具
+
+## 🚀 快速开始
+
+### 环境要求
+- Java 17+
+- Node.js 16+
+- Docker (可选)
+
+### 本地开发
+
+1. **克隆项目**
+```bash
+git clone <repository-url>
+cd pdf_tool
+```
+
+2. **后端启动**
+```bash
+# 使用Gradle
+./gradlew bootRun
+
+# 或使用Maven
+./mvnw spring-boot:run
+```
+
+3. **前端启动**
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+4. **访问应用**
+- 前端: http://localhost:3000
+- 后端API: http://localhost:8080
+- API文档: http://localhost:8080/swagger-ui.html
+
+### Docker部署
+
+```bash
+# 构建并启动
+docker-compose up --build
+
+# 后台运行
+docker-compose up -d
+```
+
+## 📁 项目结构
+
+```
+pdf_tool/
+├── backend/                 # 后端Spring Boot项目
+│   ├── src/main/java/
+│   ├── src/main/resources/
+│   └── build.gradle
+├── frontend/                # 前端Vue.js项目
+│   ├── src/
+│   ├── public/
+│   └── package.json
+├── docker-compose.yml       # Docker编排文件
+├── Dockerfile              # Docker镜像构建
+└── README.md
+```
+
+## 🔧 配置说明
+
+### 环境变量
+```bash
+# 数据库配置
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=pdfapp
+DB_USER=pdfuser
+DB_PASSWORD=password
+
+# 文件存储
+UPLOAD_PATH=/app/uploads
+MAX_FILE_SIZE=100MB
+
+# OCR配置
+TESSERACT_PATH=/usr/bin/tesseract
+OCR_LANGUAGES=eng,chi_sim
+
+# 安全配置
+JWT_SECRET=your-secret-key
+CORS_ORIGINS=http://localhost:3000
+```
+
+### 功能开关
+```yaml
+# application.yml
+pdf:
+  features:
+    ocr-enabled: true
+    batch-processing: true
+    user-management: false
+    file-encryption: true
+```
+
+## 📋 开发路线图
+
+- [x] 项目初始化和架构设计
+- [ ] 基础文件上传下载
+- [ ] PDF基础操作(合并/拆分)
+- [ ] 格式转换功能
+- [ ] 安全功能实现
+- [ ] OCR集成
+- [ ] 批量处理
+- [ ] 用户管理系统
+- [ ] API文档完善
+- [ ] 性能优化
+
+## 🤝 贡献指南
+
+1. Fork 项目
+2. 创建功能分支 (`git checkout -b feature/AmazingFeature`)
+3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
+4. 推送到分支 (`git push origin feature/AmazingFeature`)
+5. 打开 Pull Request
+
+## 📄 许可证
+
+本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情
+
+## 🙏 致谢
+
+- [Stirling-PDF](https://github.com/Stirling-Tools/Stirling-PDF) - 功能设计参考
+- [Apache PDFBox](https://pdfbox.apache.org/) - PDF处理库
+- [PDF.js](https://mozilla.github.io/pdf.js/) - PDF预览组件
+
+## 📞 联系方式
+
+- 项目主页: [GitHub Repository]
+- 问题反馈: [Issue Tracker]
+- 邮箱: support@yourcompany.com
+
+---
+
+**⭐ 如果这个项目对您有帮助，请给我们一个 Star！** 

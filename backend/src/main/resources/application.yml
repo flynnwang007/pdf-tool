@@ -1,0 +1,161 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
+
+spring:
+  application:
+    name: pdf-tool-app
+  
+  profiles:
+    active: dev
+  
+  # 数据库配置
+  datasource:
+    url: jdbc:h2:mem:pdfapp
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: 
+  
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  
+  # JPA配置
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        format_sql: true
+  
+  # 安全配置
+  security:
+    user:
+      name: admin
+      password: admin123
+  
+  # 文件上传配置
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 100MB
+      max-request-size: 100MB
+
+# 应用自定义配置
+app:
+  file:
+    upload-path: ./uploads
+    max-file-size: 104857600  # 100MB
+    allowed-types:
+      - application/pdf
+      - application/msword
+      - application/vnd.openxmlformats-officedocument.wordprocessingml.document
+      - application/vnd.ms-excel
+      - application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+      - application/vnd.ms-powerpoint
+      - application/vnd.openxmlformats-officedocument.presentationml.presentation
+      - image/jpeg
+      - image/png
+      - image/tiff
+      - image/bmp
+      - image/gif
+      - text/plain
+      - application/rtf
+  
+  # PDF处理配置
+  pdf:
+    processing:
+      thread-pool-size: 4
+      max-pool-size: 8
+      queue-capacity: 100
+    ocr:
+      enabled: true
+      languages: eng,chi_sim
+      tesseract-path: /usr/bin/tesseract
+      data-path: /usr/share/tesseract-ocr/4.00/tessdata
+    fonts:
+      chinese-paths:
+        # Linux系统中文字体路径
+        - /usr/share/fonts/truetype/wqy/wqy-microhei.ttc
+        - /usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc
+        - /usr/share/fonts/truetype/arphic/uming.ttc
+        - /usr/share/fonts/truetype/dejavu/DejaVuSans.ttf
+        # Ubuntu/Debian可能的路径
+        - /usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf
+        # CentOS/RHEL可能的路径
+        - /usr/share/fonts/chinese/TrueType/wqy-microhei.ttc
+  
+  # JWT配置
+  jwt:
+    secret: pdf-tool-jwt-secret-key-2024
+    expiration: 86400000 # 24小时
+
+# 监控配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+# 日志配置
+logging:
+  level:
+    com.yourcompany.pdfapp: DEBUG
+    org.springframework.web: DEBUG
+    org.hibernate.SQL: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/pdf-app.log
+
+---
+# 开发环境配置
+spring:
+  config:
+    activate:
+      on-profile: dev
+  
+  datasource:
+    url: jdbc:h2:mem:pdfapp
+    initialization-mode: always
+  
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+
+---
+# 生产环境配置
+spring:
+  config:
+    activate:
+      on-profile: prod
+  
+  datasource:
+    url: jdbc:postgresql://localhost:5432/pdfapp
+    username: pdfuser
+    password: pdfpassword
+    driver-class-name: org.postgresql.Driver
+  
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+logging:
+  level:
+    com.yourcompany.pdfapp: INFO
+    org.springframework.security: WARN 
