@@ -2,6 +2,32 @@
 
 基于Stirling-PDF设计理念开发的现代化PDF处理工具，提供全面的PDF操作功能。
 
+## 📱 项目演示
+
+### 移动端界面展示
+
+<div align="center">
+
+#### 🏠 主页和工具集
+<img src="screenshots/home.png" width="200" alt="项目首页" />
+<img src="screenshots/tools-overview.png" width="200" alt="工具集总览" />
+
+#### 📁 文件管理
+<img src="screenshots/upload.png" width="200" alt="文件上传" />
+<img src="screenshots/file-list.png" width="200" alt="文件列表" />
+<img src="screenshots/upload-history.png" width="200" alt="上传历史" />
+
+#### 🛠️ PDF工具
+<img src="screenshots/pdf-tools.png" width="200" alt="PDF工具" />
+<img src="screenshots/page-operations.png" width="200" alt="页面操作" />
+
+#### ✅ 操作反馈
+<img src="screenshots/upload-success.png" width="200" alt="上传成功" />
+
+</div>
+
+> 📸 更多演示截图请查看 [screenshots](./screenshots/) 目录
+
 ## ✨ 功能特性
 
 - 🔄 **PDF操作**: 合并、拆分、旋转、重排页面
