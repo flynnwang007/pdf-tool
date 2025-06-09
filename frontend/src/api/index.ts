@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { useAuthStore } from '@/stores/auth'
 
 // API基础配置
 const API_BASE_URL = 'http://localhost:8080/api'
@@ -11,6 +12,28 @@ const api = axios.create({
     'Content-Type': 'multipart/form-data'
   }
 })
+
+// 请求拦截器：添加认证信息
+api.interceptors.request.use(
+  (config) => {
+    const authStore = useAuthStore()
+    
+    // 添加Authorization头部
+    if (authStore.session?.access_token) {
+      config.headers.Authorization = `Bearer ${authStore.session.access_token}`
+    }
+    
+    // 添加用户ID头部（临时方案）
+    if (authStore.user?.id) {
+      config.headers['X-User-ID'] = authStore.user.id
+    }
+    
+    return config
+  },
+  (error) => {
+    return Promise.reject(error)
+  }
+)
 
 // 通用请求函数
 async function request(url: string, options: RequestInit = {}) {

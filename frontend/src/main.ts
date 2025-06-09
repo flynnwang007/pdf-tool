@@ -2,6 +2,7 @@ import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import router from './router'
 import App from './App.vue'
+import { useAuthStore } from '@/stores/auth'
 
 // Element Plus
 import ElementPlus from 'element-plus'
@@ -135,11 +136,21 @@ app.use(ElementPlus, {
   zIndex: 3000,
 })
 
-app.use(createPinia())
+const pinia = createPinia()
+app.use(pinia)
 app.use(router)
 
+// 初始化认证状态
+const initializeAuth = async () => {
+  const authStore = useAuthStore()
+  await authStore.initialize()
+}
+
 // 等待DOM加载完成后挂载应用
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+  // 初始化认证状态
+  await initializeAuth()
+  
   app.mount('#app')
   
   // 添加移动端优化的CSS类

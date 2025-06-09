@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteRecordRaw } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 
 const routes: RouteRecordRaw[] = [
   {
@@ -15,7 +16,8 @@ const routes: RouteRecordRaw[] = [
     name: 'Upload',
     component: () => import('@/views/Upload.vue'),
     meta: {
-      title: '文件上传'
+      title: '文件上传',
+      requiresAuth: true
     }
   },
   {
@@ -23,7 +25,8 @@ const routes: RouteRecordRaw[] = [
     name: 'Files',
     component: () => import('@/views/Files.vue'),
     meta: {
-      title: '文件管理'
+      title: '文件管理',
+      requiresAuth: true
     }
   },
   {
@@ -31,8 +34,48 @@ const routes: RouteRecordRaw[] = [
     name: 'Tools',
     component: () => import('@/views/Tools.vue'),
     meta: {
-      title: 'PDF工具'
+      title: 'PDF工具',
+      requiresAuth: true
     }
+  },
+  // 认证相关路由
+  {
+    path: '/auth',
+    name: 'Auth',
+    redirect: '/auth/login',
+    meta: {
+      title: '认证',
+      requiresGuest: true
+    },
+    children: [
+      {
+        path: 'login',
+        name: 'Login',
+        component: () => import('@/views/auth/LoginView.vue'),
+        meta: {
+          title: '登录',
+          requiresGuest: true
+        }
+      },
+      {
+        path: 'signup',
+        name: 'Signup',
+        component: () => import('@/views/auth/SignupView.vue'),
+        meta: {
+          title: '注册',
+          requiresGuest: true
+        }
+      },
+      {
+        path: 'forgot-password',
+        name: 'ForgotPassword',
+        component: () => import('@/views/auth/ForgotPasswordView.vue'),
+        meta: {
+          title: '忘记密码',
+          requiresGuest: true
+        }
+      }
+    ]
   },
   {
     path: '/:pathMatch(.*)*',
@@ -50,11 +93,35 @@ const router = createRouter({
 })
 
 // 路由守卫
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
+  const authStore = useAuthStore()
+  
+  // 如果认证状态还在初始化中，等待初始化完成
+  if (authStore.loading && !authStore.user && !authStore.session) {
+    await authStore.initialize()
+  }
+  
   // 设置页面标题
   if (to.meta?.title) {
     document.title = `${to.meta.title} - PDF工具`
   }
+  
+  // 检查是否需要认证
+  if (to.meta?.requiresAuth && !authStore.isAuthenticated) {
+    // 保存用户想要访问的页面，登录后跳转
+    next({
+      name: 'Login',
+      query: { redirect: to.fullPath }
+    })
+    return
+  }
+  
+  // 检查是否需要游客状态（已登录用户不能访问登录/注册页面）
+  if (to.meta?.requiresGuest && authStore.isAuthenticated) {
+    next({ name: 'Home' })
+    return
+  }
+  
   next()
 })
 

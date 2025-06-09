@@ -2,6 +2,9 @@ package com.yourcompany.pdfapp.service;
 
 import com.yourcompany.pdfapp.config.AppConfig;
 import com.yourcompany.pdfapp.model.FileEntity;
+import com.yourcompany.pdfapp.security.SupabaseUserPrincipal;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.multipdf.PDFMergerUtility;
 import org.apache.pdfbox.multipdf.Splitter;
@@ -84,6 +87,17 @@ public class PdfService {
     
     @Autowired
     private AppConfig.PdfProperties pdfProperties;
+    
+    /**
+     * 获取当前认证用户的ID
+     */
+    private String getCurrentUserId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof SupabaseUserPrincipal) {
+            return ((SupabaseUserPrincipal) authentication.getPrincipal()).getUserId();
+        }
+        throw new RuntimeException("未找到认证用户信息");
+    }
     
     /**
      * 合并多个PDF文件
@@ -621,7 +635,7 @@ public class PdfService {
      */
     public Long convertPdfToWord(MultipartFile file) throws IOException {
         // 先保存上传的文件
-        FileEntity savedFile = fileService.saveFile(file);
+        FileEntity savedFile = fileService.saveFile(file, getCurrentUserId());
         
         // 使用已有的基于ID的方法
         return convertPdfToWordById(savedFile.getId());
@@ -632,7 +646,7 @@ public class PdfService {
      */
     public Long convertPdfToExcel(MultipartFile file) throws IOException {
         // 先保存上传的文件
-        FileEntity savedFile = fileService.saveFile(file);
+        FileEntity savedFile = fileService.saveFile(file, getCurrentUserId());
         
         // 使用已有的基于ID的方法
         return convertPdfToExcelById(savedFile.getId());
@@ -643,7 +657,7 @@ public class PdfService {
      */
     public Long convertPdfToCsv(MultipartFile file) throws IOException {
         // 先保存上传的文件
-        FileEntity savedFile = fileService.saveFile(file);
+        FileEntity savedFile = fileService.saveFile(file, getCurrentUserId());
         
         // 使用已有的基于ID的方法
         return convertPdfToCsvById(savedFile.getId());
@@ -654,7 +668,7 @@ public class PdfService {
      */
     public String performOcr(MultipartFile file, String language) throws TesseractException, IOException {
         // 先保存上传的文件
-        FileEntity savedFile = fileService.saveFile(file);
+        FileEntity savedFile = fileService.saveFile(file, getCurrentUserId());
         
         // 使用已有的基于ID的方法
         return performOcrById(savedFile.getId(), language);
@@ -665,7 +679,7 @@ public class PdfService {
      */
     public Map<String, Object> getPdfInfo(MultipartFile file) throws IOException {
         // 先保存上传的文件
-        FileEntity savedFile = fileService.saveFile(file);
+        FileEntity savedFile = fileService.saveFile(file, getCurrentUserId());
         
         // 使用已有的基于ID的方法
         return getPdfInfoById(savedFile.getId());
@@ -687,7 +701,7 @@ public class PdfService {
         
         // 使用FileService的新方法保存文件
         String mimeType = getMimeTypeFromExtension(getFileExtension(originalName));
-        return fileService.saveFileFromBytes(fileContent, originalName, mimeType);
+        return fileService.saveFileFromBytes(fileContent, originalName, mimeType, getCurrentUserId());
     }
     
     private FileEntity saveDocumentAsFile(PDDocument document, String fileName) throws IOException {

@@ -11,6 +11,9 @@ public class FileEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
+    @Column(name = "user_id", nullable = false)
+    private String userId; // Supabase用户ID
+    
     @Column(name = "original_name", nullable = false)
     private String originalName;
     
@@ -44,8 +47,9 @@ public class FileEntity {
     public FileEntity() {}
     
     // 构造函数
-    public FileEntity(String originalName, String storedName, String filePath, 
+    public FileEntity(String userId, String originalName, String storedName, String filePath, 
                      Long fileSize, String fileType, String mimeType) {
+        this.userId = userId;
         this.originalName = originalName;
         this.storedName = storedName;
         this.filePath = filePath;
@@ -61,6 +65,14 @@ public class FileEntity {
     
     public void setId(Long id) {
         this.id = id;
+    }
+    
+    public String getUserId() {
+        return userId;
+    }
+    
+    public void setUserId(String userId) {
+        this.userId = userId;
     }
     
     public String getOriginalName() {

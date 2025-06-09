@@ -1,0 +1,17 @@
+# 开发环境配置（macOS）
+# macOS开发环境的PDF工具配置
+app:
+  pdf:
+    ocr:
+      enabled: true
+      languages: eng,chi_sim
+      tesseract-path: /opt/homebrew/bin/tesseract
+      data-path: /opt/homebrew/share/tessdata
+    fonts:
+      chinese-paths:
+        # macOS可能的中文字体路径
+        - /opt/homebrew/share/fonts/ttf/wqy-microhei.ttc
+        - /System/Library/Fonts/PingFang.ttc
+        - /System/Library/Fonts/Hiragino Sans GB.ttc
+        - /Library/Fonts/Arial Unicode.ttf
+        - /opt/homebrew/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc 

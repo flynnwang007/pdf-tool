@@ -28,7 +28,7 @@ public class FileService {
     @Autowired
     private AppConfig.FileProperties fileProperties;
     
-    public FileEntity saveFile(MultipartFile file) throws IOException {
+    public FileEntity saveFile(MultipartFile file, String userId) throws IOException {
         // 验证文件
         validateFile(file);
         
@@ -52,6 +52,7 @@ public class FileService {
         
         // 创建文件实体
         FileEntity fileEntity = new FileEntity(
+            userId,
             originalName,
             storedName,
             filePath.toString(),
@@ -73,8 +74,20 @@ public class FileService {
         return fileRepository.findAll();
     }
     
+    public List<FileEntity> getFilesByUser(String userId) {
+        return fileRepository.findByUserId(userId);
+    }
+    
     public List<FileEntity> getFilesByType(String fileType) {
         return fileRepository.findByFileType(fileType);
+    }
+    
+    public List<FileEntity> getFilesByUserAndType(String userId, String fileType) {
+        return fileRepository.findByUserIdAndFileType(userId, fileType);
+    }
+    
+    public Optional<FileEntity> getFileByUserAndId(String userId, Long fileId) {
+        return fileRepository.findByIdAndUserId(fileId, userId);
     }
     
     public void deleteFile(Long fileId) throws IOException {
@@ -161,7 +174,7 @@ public class FileService {
     /**
      * 直接保存字节数组为文件
      */
-    public FileEntity saveFileFromBytes(byte[] fileContent, String originalName, String mimeType) throws IOException {
+    public FileEntity saveFileFromBytes(byte[] fileContent, String originalName, String mimeType, String userId) throws IOException {
         if (fileContent == null || fileContent.length == 0) {
             throw new IllegalArgumentException("文件内容不能为空");
         }
@@ -185,6 +198,7 @@ public class FileService {
         
         // 创建文件实体
         FileEntity fileEntity = new FileEntity(
+            userId,
             originalName,
             storedName,
             filePath.toString(),

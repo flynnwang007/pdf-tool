@@ -7,6 +7,10 @@
           <span class="title-icon">📄</span>
           <span class="title-text">PDF工具</span>
         </span>
+        <!-- 用户头像组件 -->
+        <div class="user-section">
+          <UserAvatar />
+        </div>
       </div>
     </div>
 
@@ -69,6 +73,7 @@
 
 <script setup lang="ts">
 import { House, Upload, Folder, Tools } from '@element-plus/icons-vue'
+import UserAvatar from '@/components/auth/UserAvatar.vue'
 </script>
 
 <style scoped>
@@ -114,7 +119,7 @@ import { House, Upload, Folder, Tools } from '@element-plus/icons-vue'
 
 .status-content {
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
   max-width: 414px;
   margin: 0 auto;
@@ -138,6 +143,11 @@ import { House, Upload, Folder, Tools } from '@element-plus/icons-vue'
 .title-text {
   color: #07c160;
   font-weight: 700;
+}
+
+.user-section {
+  display: flex;
+  align-items: center;
 }
 
 @keyframes title-float {

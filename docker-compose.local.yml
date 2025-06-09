@@ -1,0 +1,95 @@
+services:
+  # PostgreSQL数据库
+  postgres:
+    image: postgres:15-alpine
+    container_name: pdf-postgres-local
+    environment:
+      POSTGRES_DB: pdfapp
+      POSTGRES_USER: pdfuser
+      POSTGRES_PASSWORD: pdfpassword
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_local_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - pdf-network
+
+  # Redis缓存
+  redis:
+    image: redis:7-alpine
+    container_name: pdf-redis-local
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_local_data:/data
+    restart: unless-stopped
+    networks:
+      - pdf-network
+
+  # 后端应用
+  pdf-backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: pdf-backend-local
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=pdfapp
+      - DB_USER=pdfuser
+      - DB_PASSWORD=pdfpassword
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - JWT_SECRET=your-super-secret-jwt-key-for-local-testing-only
+      - UPLOAD_PATH=/app/uploads
+      - MAX_FILE_SIZE=100MB
+      - TESSERACT_PATH=/usr/bin/tesseract
+      - OCR_LANGUAGES=eng,chi_sim
+    ports:
+      - "8080:8080"
+    volumes:
+      - upload_local_data:/app/uploads
+      - temp_local_data:/tmp/pdf-processing
+    depends_on:
+      - postgres
+      - redis
+    restart: unless-stopped
+    networks:
+      - pdf-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # 前端应用
+  pdf-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: pdf-frontend-local
+    ports:
+      - "3000:80"
+    depends_on:
+      - pdf-backend
+    restart: unless-stopped
+    networks:
+      - pdf-network
+
+volumes:
+  postgres_local_data:
+    driver: local
+  redis_local_data:
+    driver: local
+  upload_local_data:
+    driver: local
+  temp_local_data:
+    driver: local
+
+networks:
+  pdf-network:
+    driver: bridge 

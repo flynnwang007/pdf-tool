@@ -1,0 +1,95 @@
+{
+  "groups": [
+    {
+      "name": "app.file",
+      "type": "com.yourcompany.pdfapp.config.AppConfig$FileProperties",
+      "sourceType": "com.yourcompany.pdfapp.config.AppConfig$FileProperties"
+    },
+    {
+      "name": "app.pdf",
+      "type": "com.yourcompany.pdfapp.config.AppConfig$PdfProperties",
+      "sourceType": "com.yourcompany.pdfapp.config.AppConfig$PdfProperties"
+    },
+    {
+      "name": "app.pdf.fonts",
+      "type": "com.yourcompany.pdfapp.config.AppConfig$PdfProperties$Fonts",
+      "sourceType": "com.yourcompany.pdfapp.config.AppConfig$PdfProperties",
+      "sourceMethod": "public com.yourcompany.pdfapp.config.AppConfig.PdfProperties.Fonts getFonts() "
+    },
+    {
+      "name": "app.pdf.ocr",
+      "type": "com.yourcompany.pdfapp.config.AppConfig$PdfProperties$Ocr",
+      "sourceType": "com.yourcompany.pdfapp.config.AppConfig$PdfProperties",
+      "sourceMethod": "public com.yourcompany.pdfapp.config.AppConfig.PdfProperties.Ocr getOcr() "
+    },
+    {
+      "name": "app.pdf.processing",
+      "type": "com.yourcompany.pdfapp.config.AppConfig$PdfProperties$Processing",
+      "sourceType": "com.yourcompany.pdfapp.config.AppConfig$PdfProperties",
+      "sourceMethod": "public com.yourcompany.pdfapp.config.AppConfig.PdfProperties.Processing getProcessing() "
+    }
+  ],
+  "properties": [
+    {
+      "name": "app.file.allowed-types",
+      "type": "java.util.List<java.lang.String>",
+      "sourceType": "com.yourcompany.pdfapp.config.AppConfig$FileProperties"
+    },
+    {
+      "name": "app.file.max-file-size",
+      "type": "java.lang.Long",
+      "sourceType": "com.yourcompany.pdfapp.config.AppConfig$FileProperties"
+    },
+    {
+      "name": "app.file.temp-path",
+      "type": "java.lang.String",
+      "sourceType": "com.yourcompany.pdfapp.config.AppConfig$FileProperties"
+    },
+    {
+      "name": "app.file.upload-path",
+      "type": "java.lang.String",
+      "sourceType": "com.yourcompany.pdfapp.config.AppConfig$FileProperties"
+    },
+    {
+      "name": "app.pdf.fonts.chinese-paths",
+      "type": "java.util.List<java.lang.String>",
+      "sourceType": "com.yourcompany.pdfapp.config.AppConfig$PdfProperties$Fonts"
+    },
+    {
+      "name": "app.pdf.ocr.data-path",
+      "type": "java.lang.String",
+      "sourceType": "com.yourcompany.pdfapp.config.AppConfig$PdfProperties$Ocr"
+    },
+    {
+      "name": "app.pdf.ocr.enabled",
+      "type": "java.lang.Boolean",
+      "sourceType": "com.yourcompany.pdfapp.config.AppConfig$PdfProperties$Ocr"
+    },
+    {
+      "name": "app.pdf.ocr.languages",
+      "type": "java.lang.String",
+      "sourceType": "com.yourcompany.pdfapp.config.AppConfig$PdfProperties$Ocr"
+    },
+    {
+      "name": "app.pdf.ocr.tesseract-path",
+      "type": "java.lang.String",
+      "sourceType": "com.yourcompany.pdfapp.config.AppConfig$PdfProperties$Ocr"
+    },
+    {
+      "name": "app.pdf.processing.max-pool-size",
+      "type": "java.lang.Integer",
+      "sourceType": "com.yourcompany.pdfapp.config.AppConfig$PdfProperties$Processing"
+    },
+    {
+      "name": "app.pdf.processing.queue-capacity",
+      "type": "java.lang.Integer",
+      "sourceType": "com.yourcompany.pdfapp.config.AppConfig$PdfProperties$Processing"
+    },
+    {
+      "name": "app.pdf.processing.thread-pool-size",
+      "type": "java.lang.Integer",
+      "sourceType": "com.yourcompany.pdfapp.config.AppConfig$PdfProperties$Processing"
+    }
+  ],
+  "hints": []
+}

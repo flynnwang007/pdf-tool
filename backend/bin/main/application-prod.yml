@@ -1,0 +1,52 @@
+# 生产环境配置（Linux服务器）
+spring:
+  config:
+    activate:
+      on-profile: prod
+  
+  datasource:
+    url: jdbc:postgresql://localhost:5432/pdfapp
+    username: pdfuser
+    password: pdfpassword
+    driver-class-name: org.postgresql.Driver
+  
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+# Linux生产环境的PDF工具配置
+app:
+  pdf:
+    ocr:
+      enabled: true
+      languages: eng,chi_sim
+      tesseract-path: /usr/bin/tesseract
+      data-path: /usr/share/tesseract-ocr/4.00/tessdata
+    fonts:
+      chinese-paths:
+        # Ubuntu/Debian中文字体路径
+        - /usr/share/fonts/truetype/wqy/wqy-microhei.ttc
+        - /usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc
+        - /usr/share/fonts/truetype/arphic/uming.ttc
+        - /usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf
+        # CentOS/RHEL中文字体路径
+        - /usr/share/fonts/chinese/TrueType/wqy-microhei.ttc
+        - /usr/share/fonts/google-noto-cjk/NotoSansCJK-Regular.ttc
+        # 通用字体路径
+        - /usr/share/fonts/truetype/dejavu/DejaVuSans.ttf
+
+# 生产环境日志配置
+logging:
+  level:
+    com.yourcompany.pdfapp: INFO
+    org.springframework.security: WARN 
+    org.hibernate.SQL: ERROR
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: /var/log/pdf-tool/app.log 

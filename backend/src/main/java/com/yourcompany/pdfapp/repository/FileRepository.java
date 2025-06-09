@@ -13,7 +13,16 @@ import java.util.Optional;
 @Repository
 public interface FileRepository extends JpaRepository<FileEntity, Long> {
     
-    // 根据文件名查找
+    // 根据用户ID查找所有文件
+    List<FileEntity> findByUserId(String userId);
+    
+    // 根据用户ID和文件ID查找
+    Optional<FileEntity> findByIdAndUserId(Long id, String userId);
+    
+    // 根据用户ID和文件类型查找
+    List<FileEntity> findByUserIdAndFileType(String userId, String fileType);
+    
+    // 根据文件名查找（保留，但应该按用户过滤）
     Optional<FileEntity> findByOriginalName(String originalName);
     
     // 根据存储名查找
@@ -29,11 +38,19 @@ public interface FileRepository extends JpaRepository<FileEntity, Long> {
     @Query("SELECT f FROM FileEntity f WHERE f.fileSize BETWEEN :minSize AND :maxSize")
     List<FileEntity> findByFileSizeBetween(@Param("minSize") Long minSize, @Param("maxSize") Long maxSize);
     
-    // 统计文件总数
+    // 统计用户文件总数
+    @Query("SELECT COUNT(f) FROM FileEntity f WHERE f.userId = :userId")
+    Long countFilesByUserId(@Param("userId") String userId);
+    
+    // 统计用户文件总大小
+    @Query("SELECT SUM(f.fileSize) FROM FileEntity f WHERE f.userId = :userId")
+    Long sumFileSizeByUserId(@Param("userId") String userId);
+    
+    // 统计文件总数（管理员功能）
     @Query("SELECT COUNT(f) FROM FileEntity f")
     Long countAllFiles();
     
-    // 统计文件总大小
+    // 统计文件总大小（管理员功能）
     @Query("SELECT SUM(f.fileSize) FROM FileEntity f")
     Long sumFileSize();
 } 

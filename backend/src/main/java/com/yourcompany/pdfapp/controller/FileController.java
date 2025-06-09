@@ -1,6 +1,7 @@
 package com.yourcompany.pdfapp.controller;
 
 import com.yourcompany.pdfapp.model.FileEntity;
+import com.yourcompany.pdfapp.security.SupabaseUserPrincipal;
 import com.yourcompany.pdfapp.service.FileService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
@@ -9,6 +10,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import java.io.UnsupportedEncodingException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -27,14 +30,30 @@ public class FileController {
     @Autowired
     private FileService fileService;
     
+    // 获取当前认证用户
+    private String getCurrentUserId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof SupabaseUserPrincipal) {
+            return ((SupabaseUserPrincipal) authentication.getPrincipal()).getUserId();
+        }
+        return null;
+    }
+    
     @PostMapping("/upload")
     public ResponseEntity<Map<String, Object>> uploadFile(
             @RequestParam("file") MultipartFile file) {
         
         Map<String, Object> response = new HashMap<>();
+        String userId = getCurrentUserId();
+        
+        if (userId == null) {
+            response.put("success", false);
+            response.put("message", "用户未认证");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
         
         try {
-            FileEntity savedFile = fileService.saveFile(file);
+            FileEntity savedFile = fileService.saveFile(file, userId);
             
             response.put("success", true);
             response.put("message", "文件上传成功");
@@ -63,9 +82,16 @@ public class FileController {
     @GetMapping
     public ResponseEntity<Map<String, Object>> getAllFiles() {
         Map<String, Object> response = new HashMap<>();
+        String userId = getCurrentUserId();
+        
+        if (userId == null) {
+            response.put("success", false);
+            response.put("message", "用户未认证");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
         
         try {
-            List<FileEntity> files = fileService.getAllFiles();
+            List<FileEntity> files = fileService.getFilesByUser(userId);
             
             response.put("success", true);
             response.put("data", files);
@@ -83,9 +109,16 @@ public class FileController {
     @GetMapping("/{fileId}")
     public ResponseEntity<Map<String, Object>> getFile(@PathVariable Long fileId) {
         Map<String, Object> response = new HashMap<>();
+        String userId = getCurrentUserId();
+        
+        if (userId == null) {
+            response.put("success", false);
+            response.put("message", "用户未认证");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
         
         try {
-            Optional<FileEntity> file = fileService.getFile(fileId);
+            Optional<FileEntity> file = fileService.getFileByUserAndId(userId, fileId);
             
             if (file.isPresent()) {
                 response.put("success", true);
@@ -93,7 +126,7 @@ public class FileController {
                 return ResponseEntity.ok(response);
             } else {
                 response.put("success", false);
-                response.put("message", "文件不存在");
+                response.put("message", "文件不存在或无权访问");
                 return ResponseEntity.notFound().build();
             }
             
@@ -106,8 +139,14 @@ public class FileController {
     
     @GetMapping("/{fileId}/download")
     public ResponseEntity<Resource> downloadFile(@PathVariable Long fileId) {
+        String userId = getCurrentUserId();
+        
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        
         try {
-            Optional<FileEntity> fileEntity = fileService.getFile(fileId);
+            Optional<FileEntity> fileEntity = fileService.getFileByUserAndId(userId, fileId);
             
             if (fileEntity.isPresent()) {
                 FileEntity file = fileEntity.get();
