@@ -1,0 +1,98 @@
+services:
+  # PostgreSQL数据库
+  postgres:
+    image: postgres:15-alpine
+    container_name: pdf-postgres-prod
+    environment:
+      POSTGRES_DB: pdfapp
+      POSTGRES_USER: pdfuser
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-your-strong-password-here}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8"
+    ports:
+      - "5432:5432"
+    volumes:
+      - /var/lib/pdf-app/postgres:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: unless-stopped
+    networks:
+      - pdf-network
+
+  # Redis缓存
+  redis:
+    image: redis:7-alpine
+    container_name: pdf-redis-prod
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - /var/lib/pdf-app/redis:/data
+    restart: unless-stopped
+    networks:
+      - pdf-network
+
+  # 后端应用
+  pdf-backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.server
+    container_name: pdf-backend-prod
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=pdfapp
+      - DB_USER=pdfuser
+      - DB_PASSWORD=${DB_PASSWORD:-your-strong-password-here}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - JWT_SECRET=${JWT_SECRET:-your-super-secret-jwt-key-at-least-32-chars-long}
+      - UPLOAD_PATH=/app/uploads
+      - MAX_FILE_SIZE=100MB
+      - TESSERACT_PATH=/usr/bin/tesseract
+      - OCR_LANGUAGES=eng,chi_sim
+    ports:
+      - "${BACKEND_PORT:-8080}:8080"
+    volumes:
+      - /var/lib/pdf-app/uploads:/app/uploads
+      - /var/lib/pdf-app/temp:/tmp/pdf-processing
+    depends_on:
+      - postgres
+      - redis
+    restart: unless-stopped
+    networks:
+      - pdf-network
+    healthcheck:
+      test: ["CMD", "java", "-cp", "app.jar", "org.springframework.boot.loader.JarLauncher", "--help"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # 前端应用
+  pdf-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: pdf-frontend-prod
+    environment:
+      - VITE_API_BASE_URL=${API_BASE_URL:-http://localhost:8080}
+    ports:
+      - "${FRONTEND_PORT:-80}:80"
+    depends_on:
+      - pdf-backend
+    restart: unless-stopped
+    networks:
+      - pdf-network
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  upload_data:
+    driver: local
+  temp_data:
+    driver: local
+
+networks:
+  pdf-network:
+    driver: bridge 
