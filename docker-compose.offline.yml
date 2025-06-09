@@ -1,0 +1,103 @@
+version: '3.8'
+
+services:
+  pdf-frontend:
+    image: pdf_tool-pdf-frontend:latest
+    container_name: pdf-frontend
+    ports:
+      - "3001:80"
+    depends_on:
+      - pdf-backend
+    networks:
+      - pdf-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  pdf-backend:
+    image: pdf_tool-pdf-backend:latest
+    container_name: pdf-backend
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://pdf-postgres:5432/pdf_tool
+      - SPRING_DATASOURCE_USERNAME=pdf_user
+      - SPRING_DATASOURCE_PASSWORD=pdf_password_2024
+      - SPRING_REDIS_HOST=pdf-redis
+      - SPRING_REDIS_PORT=6379
+      - SPRING_REDIS_PASSWORD=redis_password_2024
+      - SERVER_PORT=8080
+      - LOGGING_LEVEL_ROOT=INFO
+      - JAVA_OPTS=-Xmx512m -Xms256m
+    volumes:
+      - backend_uploads:/app/uploads
+      - backend_temp:/tmp/pdf-processing
+    depends_on:
+      - pdf-postgres
+      - pdf-redis
+    networks:
+      - pdf-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "java", "-cp", "app.jar", "org.springframework.boot.loader.JarLauncher", "--help"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  pdf-postgres:
+    image: postgres:15
+    container_name: pdf-postgres
+    environment:
+      - POSTGRES_DB=pdf_tool
+      - POSTGRES_USER=pdf_user
+      - POSTGRES_PASSWORD=pdf_password_2024
+      - POSTGRES_INITDB_ARGS=--encoding=UTF-8 --lc-collate=C --lc-ctype=C
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "5432:5432"
+    networks:
+      - pdf-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pdf_user -d pdf_tool"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  pdf-redis:
+    image: redis:alpine
+    container_name: pdf-redis
+    command: redis-server --requirepass redis_password_2024 --appendonly yes
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - pdf-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  backend_uploads:
+    driver: local
+  backend_temp:
+    driver: local
+
+networks:
+  pdf-network:
+    driver: bridge 
