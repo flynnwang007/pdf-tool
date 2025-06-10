@@ -5,18 +5,33 @@ set -e
 
 echo "🚀 开始部署..."
 
-# 环境变量
+# 加载环境变量
+if [ -f "../.env" ]; then
+    echo "📝 加载.env文件..."
+    set -a  # 自动export所有变量
+    source ../.env
+    set +a
+    echo "✅ 环境变量已加载"
+else
+    echo "⚠️  警告: 未找到.env文件，使用默认配置"
+fi
+
+# 设置构建环境变量
 export NODE_ENV=production
 export VITE_API_BASE_URL="http://14.103.200.105:8080/api"
 
-# 生产环境Supabase配置（请根据实际情况设置）
-# export VITE_SUPABASE_URL="https://your-production-supabase-url.supabase.co"
-# export VITE_SUPABASE_ANON_KEY="your-production-anon-key"
+# 验证必要的环境变量
+if [ -z "$VITE_SUPABASE_URL" ]; then
+    echo "❌ 错误: VITE_SUPABASE_URL 未设置"
+    exit 1
+fi
 
-# 临时使用开发环境Supabase（不安全，仅用于测试）
-echo "⚠️  警告: 使用开发环境Supabase配置，生产环境请设置独立的Supabase实例"
-export VITE_SUPABASE_URL="https://d11558og91hm5619qfbg.baseapi.memfiredb.com"
-export VITE_SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImV4cCI6MzMyNTk3Njk5NSwiaWF0IjoxNzQ5MTc2OTk1LCJpc3MiOiJzdXBhYmFzZSJ9.fqRSc8fZxx5V8SgCWZME-eTuhc2A3bOIOE9iDympXWo"
+if [ -z "$VITE_SUPABASE_ANON_KEY" ]; then
+    echo "❌ 错误: VITE_SUPABASE_ANON_KEY 未设置"
+    exit 1
+fi
+
+echo "✅ 使用Supabase配置: $VITE_SUPABASE_URL"
 
 # 清理
 echo "📦 清理旧文件..."

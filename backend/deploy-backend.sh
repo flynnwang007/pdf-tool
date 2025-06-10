@@ -32,15 +32,28 @@ fi
 
 echo "✅ 构建成功：$JAR_FILE"
 
+# 加载环境变量
+if [ -f "../.env" ]; then
+    echo "📝 加载.env文件..."
+    set -a  # 自动export所有变量
+    source ../.env
+    set +a
+    echo "✅ 环境变量已加载"
+else
+    echo "⚠️  警告: 未找到.env文件，使用默认配置"
+fi
+
 # 启动服务
 echo "🚀 启动后端服务..."
 
-# 生产环境Supabase配置（请根据实际情况设置）
-# export SUPABASE_JWT_SECRET="your-production-supabase-jwt-secret"
-
-# 临时使用开发环境配置（不安全，仅用于测试）
-echo "⚠️  警告: 使用开发环境Supabase配置，生产环境请设置独立的配置"
-export SUPABASE_JWT_SECRET="your-supabase-jwt-secret-here"
+# 验证必要的环境变量
+if [ -n "$MEMFIRE_JWT_SECRET" ]; then
+    export SUPABASE_JWT_SECRET="$MEMFIRE_JWT_SECRET"
+    echo "✅ 使用MemFireDB JWT配置"
+else
+    echo "⚠️  警告: 未找到MemFireDB配置，使用默认值"
+    export SUPABASE_JWT_SECRET="your-supabase-jwt-secret-here"
+fi
 
 nohup java -jar "$JAR_FILE" \
     --spring.profiles.active=prod \
