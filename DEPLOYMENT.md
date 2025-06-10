@@ -1,229 +1,244 @@
-# PDF工具项目部署指南
+# PDF工具云服务器部署指南
 
-## 🚀 环境要求
+## 🚀 快速部署
 
-### 基础依赖
-- Java 17+
-- Tesseract OCR 5.x
-- 中文字体包
-
-## 📦 Tesseract OCR 安装
-
-### Ubuntu/Debian
-```bash
-# 安装Tesseract OCR
-sudo apt-get update
-sudo apt-get install tesseract-ocr
-
-# 安装中文语言包
-sudo apt-get install tesseract-ocr-chi-sim tesseract-ocr-chi-tra
-
-# 安装其他语言包（可选）
-sudo apt-get install tesseract-ocr-jpn tesseract-ocr-kor
-```
-
-### CentOS/RHEL
-```bash
-# 安装EPEL源
-sudo yum install epel-release
-
-# 安装Tesseract OCR
-sudo yum install tesseract tesseract-langpack-chi_sim tesseract-langpack-chi_tra
-
-# 或者使用dnf（较新版本）
-sudo dnf install tesseract tesseract-langpack-chi_sim tesseract-langpack-chi_tra
-```
-
-### macOS（开发环境）
-```bash
-# 使用Homebrew安装
-brew install tesseract tesseract-lang
-```
-
-## 🖋️ 中文字体安装
-
-### Ubuntu/Debian
-```bash
-# 安装WenQuanYi字体
-sudo apt-get install fonts-wqy-microhei fonts-wqy-zenhei
-
-# 安装Noto字体
-sudo apt-get install fonts-noto-cjk
-
-# 安装文泉驿字体
-sudo apt-get install fonts-arphic-uming
-```
-
-### CentOS/RHEL
-```bash
-# 安装中文字体
-sudo yum install wqy-microhei-fonts wqy-zenhei-fonts
-
-# 或者使用dnf
-sudo dnf install google-noto-cjk-fonts
-```
-
-## ⚙️ 应用配置
-
-### 开发环境 (macOS)
-使用 `application-dev.yml`，自动配置为：
-- Tesseract路径: `/opt/homebrew/bin/tesseract`
-- 数据路径: `/opt/homebrew/share/tessdata`
-- 字体路径: macOS系统字体
-
-启动命令：
-```bash
-java -jar pdf-tool-app.jar --spring.profiles.active=dev
-```
-
-### 生产环境 (Linux)
-使用 `application-prod.yml`，配置为：
-- Tesseract路径: `/usr/bin/tesseract`
-- 数据路径: `/usr/share/tesseract-ocr/4.00/tessdata`
-- 字体路径: Linux系统字体
-
-启动命令：
-```bash
-java -jar pdf-tool-app.jar --spring.profiles.active=prod
-```
-
-## 🐳 Docker部署
-
-### 使用Docker Compose
-```bash
-# 修改docker-compose.yml中的环境变量
-# 确保以下环境变量正确设置：
-# - TESSERACT_PATH=/usr/bin/tesseract
-# - OCR_LANGUAGES=eng,chi_sim
-
-docker-compose up -d
-```
-
-### Dockerfile示例
-```dockerfile
-FROM openjdk:17-jdk-slim
-
-# 安装Tesseract OCR和中文字体
-RUN apt-get update && \
-    apt-get install -y tesseract-ocr \
-                       tesseract-ocr-chi-sim \
-                       tesseract-ocr-chi-tra \
-                       fonts-wqy-microhei \
-                       fonts-noto-cjk && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
-
-# 复制应用程序
-COPY target/pdf-tool-app.jar app.jar
-
-# 设置环境变量
-ENV SPRING_PROFILES_ACTIVE=prod
-ENV TESSDATA_PREFIX=/usr/share/tesseract-ocr/4.00/tessdata
-
-EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "/app.jar"]
-```
-
-## 🔧 环境变量配置
-
-以下环境变量可用于覆盖配置文件设置：
+### 1. 服务器环境准备
 
 ```bash
-# 数据库配置
-export DB_HOST=localhost
-export DB_PORT=5432
-export DB_NAME=pdfapp
-export DB_USER=pdfuser
-export DB_PASSWORD=pdfpassword
+# 更新系统
+sudo apt update && sudo apt upgrade -y
 
-# Tesseract配置
-export TESSERACT_PATH=/usr/bin/tesseract
-export TESSDATA_PREFIX=/usr/share/tesseract-ocr/4.00/tessdata
-export OCR_LANGUAGES=eng,chi_sim
+# 安装必要软件
+sudo apt install -y git curl nginx openjdk-17-jdk nodejs npm
 
-# 应用配置
-export UPLOAD_PATH=/app/uploads
-export MAX_FILE_SIZE=100MB
+# 克隆项目
+git clone https://github.com/flynnwang007/pdf-tool.git
+cd pdf-tool
+```
+
+### 2. 配置环境变量
+
+创建 `.env` 文件：
+
+```bash
+cp .env.example .env  # 如果有示例文件
+# 或者手动创建
+nano .env
+```
+
+`.env` 文件内容（**必须配置**）：
+
+```env
+# MemFireDB 配置（必须）
+VITE_SUPABASE_URL=https://d11558og91hm5619qfbg.baseapi.memfiredb.com
+VITE_SUPABASE_ANON_KEY=your-anon-key-here
+MEMFIRE_JWT_SECRET=0d37e31b-3452-4949-8e19-04bc619c78c9
+
+# 其他配置
+MEMFIRE_DB_URL=jdbc:postgresql://db.d11558og91hm5619qfbg.supabase.co:5432/postgres
+SPRING_PROFILES_ACTIVE=memfire
+```
+
+### 3. 部署后端
+
+```bash
+cd backend
+./deploy-backend.sh
+```
+
+### 4. 部署前端
+
+```bash
+cd frontend
+./deploy-simple.sh
+```
+
+### 5. 验证部署
+
+```bash
+cd ..
+./deploy-check.sh
+```
+
+## 🔧 详细配置
+
+### Nginx 配置
+
+创建 `/etc/nginx/sites-available/pdf-tool`：
+
+```nginx
+# 前端服务 (端口 8081)
+server {
+    listen 8081;
+    server_name 14.103.200.105;
+    
+    root /var/www/pdf-tool;
+    index index.html;
+    
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+    
+    # API代理到后端
+    location /api/ {
+        proxy_pass http://localhost:8080/api/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+
+# 后端服务 (端口 8080) - 可选的反向代理
+server {
+    listen 8080;
+    server_name 14.103.200.105;
+    
+    location / {
+        proxy_pass http://localhost:8080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+```
+
+启用配置：
+
+```bash
+sudo ln -s /etc/nginx/sites-available/pdf-tool /etc/nginx/sites-enabled/
+sudo nginx -t
+sudo systemctl reload nginx
+```
+
+### 防火墙配置
+
+```bash
+sudo ufw allow 8080/tcp
+sudo ufw allow 8081/tcp
+sudo ufw allow 22/tcp
+sudo ufw --force enable
 ```
 
 ## 📋 部署检查清单
 
-### 部署前检查
-- [ ] Tesseract OCR已安装
-- [ ] 中文语言包已安装
-- [ ] 中文字体已安装
-- [ ] 数据库已配置
-- [ ] 上传目录权限正确
+### ✅ 部署前检查
 
-### 验证安装
+- [ ] 服务器环境准备完成
+- [ ] `.env` 文件配置正确
+- [ ] MemFireDB JWT密钥已获取
+- [ ] Nginx配置已更新
+- [ ] 防火墙端口已开放
+
+### ✅ 部署后验证
+
+- [ ] 后端服务启动成功 (`curl http://14.103.200.105:8080/actuator/health`)
+- [ ] 前端服务访问正常 (`curl http://14.103.200.105:8081`)
+- [ ] JWT验证功能正常
+- [ ] API认证工作正常
+- [ ] 无HMR变量残留
+
+## 🐛 故障排除
+
+### 后端问题
+
 ```bash
-# 检查Tesseract安装
-tesseract --version
+# 查看应用日志
+tail -f backend/logs/app.log
 
-# 检查支持的语言
-tesseract --list-langs
+# 查看启动日志
+tail -f backend/logs/nohup.log
 
-# 检查字体
-fc-list :lang=zh
+# 检查端口占用
+netstat -tulpn | grep :8080
 
-# 测试OCR功能
-curl -X POST http://localhost:8080/api/pdf-tools/ocr/test
+# 手动测试JWT
+cd backend && node test-jwt-simple.js
 ```
 
-## ⚠️ 常见问题
+### 前端问题
 
-### 1. Tesseract库加载失败
-**问题**: `UnsatisfiedLinkError: Unable to load library 'tesseract'`
-
-**解决方案**:
 ```bash
-# 检查Tesseract是否正确安装
-which tesseract
-tesseract --version
+# 检查构建产物
+ls -la frontend/dist/
 
-# 设置库路径（如果需要）
-export LD_LIBRARY_PATH=/usr/lib:/usr/local/lib:$LD_LIBRARY_PATH
+# 检查nginx错误日志
+sudo tail -f /var/log/nginx/error.log
+
+# 检查HMR变量残留
+grep -r "__DEFINES__\|__HMR_" frontend/dist/
 ```
 
-### 2. 中文字体不支持
-**问题**: 水印中文字符显示为方块或X
+### 常见错误解决
 
-**解决方案**:
+1. **JWT验证失败**
+   - 检查 `MEMFIRE_JWT_SECRET` 是否正确设置
+   - 确认密钥长度为36字符
+   - 重启后端服务
+
+2. **前端白屏/紫屏**
+   - 检查HMR变量是否完全替换
+   - 重新运行前端部署脚本
+   - 检查控制台错误信息
+
+3. **API 403错误**
+   - 确认JWT令牌正确传递
+   - 检查CORS配置
+   - 验证认证过滤器配置
+
+## 🔄 更新部署
+
 ```bash
-# 安装中文字体
-sudo apt-get install fonts-wqy-microhei
+# 拉取最新代码
+git pull origin main
 
-# 检查字体是否安装
-fc-list :lang=zh
+# 重新部署后端
+cd backend && ./deploy-backend.sh
+
+# 重新部署前端
+cd ../frontend && ./deploy-simple.sh
+
+# 验证部署
+cd .. && ./deploy-check.sh
 ```
 
-### 3. tessdata路径错误
-**问题**: `Error opening data file`
+## 📊 监控
 
-**解决方案**:
-- 检查 `TESSDATA_PREFIX` 环境变量
-- 确认tessdata目录存在且可读
-- 检查应用配置文件中的路径设置
+### 服务状态监控
 
-## 🔄 不同系统的路径差异
+```bash
+# 检查Java进程
+ps aux | grep java
 
-| 系统 | Tesseract路径 | tessdata路径 | 中文字体路径示例 |
-|------|---------------|--------------|------------------|
-| Ubuntu/Debian | `/usr/bin/tesseract` | `/usr/share/tesseract-ocr/4.00/tessdata` | `/usr/share/fonts/truetype/wqy/` |
-| CentOS/RHEL | `/usr/bin/tesseract` | `/usr/share/tesseract/tessdata` | `/usr/share/fonts/chinese/` |
-| macOS (Homebrew) | `/opt/homebrew/bin/tesseract` | `/opt/homebrew/share/tessdata` | `/System/Library/Fonts/` |
-| Docker | `/usr/bin/tesseract` | `/usr/share/tesseract-ocr/4.00/tessdata` | `/usr/share/fonts/` |
+# 检查端口监听
+netstat -tulpn | grep -E ":8080|:8081"
 
-## 🎯 性能优化建议
+# 检查nginx状态
+sudo systemctl status nginx
+```
 
-1. **内存配置**: 为OCR操作分配足够内存
-   ```bash
-   export JAVA_OPTS="-Xmx2g -Xms1g"
-   ```
+### 日志监控
 
-2. **线程池配置**: 根据服务器性能调整PDF处理线程数
-   ```yml
-   app.pdf.processing.max-pool-size: 8
-   ```
+```bash
+# 实时查看应用日志
+tail -f backend/logs/app.log
 
-3. **文件存储**: 使用SSD存储临时文件以提高处理速度 
+# 查看nginx访问日志
+sudo tail -f /var/log/nginx/access.log
+```
+
+## 🔐 安全建议
+
+1. 定期更新JWT密钥
+2. 使用HTTPS（可配置SSL证书）
+3. 限制API访问频率
+4. 定期备份数据库
+5. 监控异常访问
+
+## 📞 技术支持
+
+- 项目地址: https://github.com/flynnwang007/pdf-tool
+- 前端访问: http://14.103.200.105:8081
+- 后端API: http://14.103.200.105:8080
+- 健康检查: http://14.103.200.105:8080/actuator/health 

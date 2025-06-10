@@ -48,11 +48,17 @@ echo "🚀 启动后端服务..."
 
 # 验证必要的环境变量
 if [ -n "$MEMFIRE_JWT_SECRET" ]; then
-    export SUPABASE_JWT_SECRET="$MEMFIRE_JWT_SECRET"
     echo "✅ 使用MemFireDB JWT配置"
+    echo "🔑 JWT密钥长度: $(echo -n "$MEMFIRE_JWT_SECRET" | wc -c) 字符"
 else
-    echo "⚠️  警告: 未找到MemFireDB配置，使用默认值"
-    export SUPABASE_JWT_SECRET="your-supabase-jwt-secret-here"
+    echo "❌ 错误: MEMFIRE_JWT_SECRET 环境变量未设置"
+    echo "请在.env文件中设置 MEMFIRE_JWT_SECRET=your-memfire-jwt-secret"
+    exit 1
+fi
+
+# 验证其他MemFireDB配置
+if [ -z "$VITE_SUPABASE_URL" ] || [ -z "$VITE_SUPABASE_ANON_KEY" ]; then
+    echo "⚠️  警告: MemFireDB URL或ANON_KEY未设置，某些功能可能不可用"
 fi
 
 nohup java -jar "$JAR_FILE" \
@@ -71,6 +77,19 @@ if curl -f http://localhost:8080/actuator/health > /dev/null 2>&1; then
     echo "✅ 后端服务启动成功！"
     echo "🌐 服务地址: http://14.103.200.105:8080"
     echo "📊 健康检查: http://14.103.200.105:8080/actuator/health"
+    
+    # 测试JWT验证功能
+    echo "🔐 测试JWT验证功能..."
+    if [ -f "test-jwt-simple.js" ] && command -v node > /dev/null 2>&1; then
+        echo "⏳ 运行JWT测试..."
+        if node test-jwt-simple.js | grep -q "JWT验证成功"; then
+            echo "✅ JWT验证功能正常"
+        else
+            echo "⚠️  JWT验证功能异常，请检查配置"
+        fi
+    else
+        echo "⚠️  跳过JWT测试（缺少测试文件或Node.js）"
+    fi
 else
     echo "❌ 后端服务启动失败，请检查日志："
     echo "📝 应用日志: tail -f logs/app.log"
