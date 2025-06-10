@@ -56,13 +56,8 @@ export default defineConfig({
     outDir: 'dist',
     assetsDir: 'assets',
     sourcemap: false,
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: true,
-        drop_debugger: true,
-      },
-    },
+    // 使用esbuild进行代码压缩（更快）
+    minify: 'esbuild',
     rollupOptions: {
       output: {
         manualChunks: {

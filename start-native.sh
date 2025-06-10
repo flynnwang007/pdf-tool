@@ -62,7 +62,33 @@ mkdir -p $PROJECT_ROOT/logs
 # 构建后端
 print_info "构建后端项目..."
 cd $PROJECT_ROOT/backend
-./gradlew clean build -x test
+
+# 检查gradle wrapper是否正常
+if [ ! -f "gradle/wrapper/gradle-wrapper.jar" ] || ! ./gradlew --version >/dev/null 2>&1; then
+    print_warning "Gradle Wrapper损坏，正在修复..."
+    
+    # 检查系统是否有gradle
+    if ! command -v gradle &> /dev/null; then
+        print_info "安装Gradle..."
+        sudo apt update
+        sudo apt install gradle -y
+    fi
+    
+    # 重新生成gradle wrapper
+    print_info "重新生成Gradle Wrapper..."
+    rm -rf gradle/
+    gradle wrapper --gradle-version 8.5
+    chmod +x gradlew
+fi
+
+# 构建项目
+print_info "开始构建后端..."
+if ./gradlew --version >/dev/null 2>&1; then
+    ./gradlew clean build -x test
+else
+    print_warning "使用系统Gradle构建..."
+    gradle clean build -x test
+fi
 
 # 检查jar文件
 JAR_FILE=$(find build/libs -name "*.jar" -not -name "*-plain.jar" | head -1)
