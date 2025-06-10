@@ -63,6 +63,10 @@ public class JwtService {
     
     public Boolean validateToken(String token) {
         try {
+            logger.debug("开始验证JWT令牌，长度: {}", token.length());
+            logger.debug("使用的JWT密钥长度: {}", jwtSecret.length());
+            logger.debug("JWT密钥前10个字符: {}", jwtSecret.substring(0, Math.min(10, jwtSecret.length())));
+            
             // 检查令牌格式和签名
             Claims claims = extractAllClaims(token);
             
@@ -89,7 +93,8 @@ public class JwtService {
             return true;
             
         } catch (Exception e) {
-            logger.error("JWT令牌验证失败: {}", e.getMessage());
+            logger.error("JWT令牌验证失败: {} - {}", e.getClass().getSimpleName(), e.getMessage());
+            logger.error("完整错误信息: ", e);
             return false;
         }
     }
