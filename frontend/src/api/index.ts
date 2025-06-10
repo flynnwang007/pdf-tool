@@ -1,8 +1,8 @@
 import axios from 'axios'
 import { useAuthStore } from '@/stores/auth'
 
-// API基础配置
-const API_BASE_URL = 'http://localhost:8080/api'
+// API基础配置 - 支持环境变量
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://14.103.200.105:8080/api'
 
 // 创建axios实例
 const api = axios.create({
