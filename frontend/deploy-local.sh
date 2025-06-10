@@ -86,8 +86,17 @@ install_dependencies() {
     
     cd "$PROJECT_ROOT"
     
-    # 使用npm install安装完整依赖
-    npm install
+    # 清理可能的缓存
+    rm -rf node_modules package-lock.json
+    
+    # 安装完整依赖（包括dev依赖，因为需要vite构建工具）
+    npm install --include=dev
+    
+    # 验证vite是否可用
+    if ! npx vite --version > /dev/null 2>&1; then
+        print_warning "vite未正确安装，尝试单独安装..."
+        npm install vite@^5.0.8
+    fi
     
     print_status "依赖安装完成"
 }
