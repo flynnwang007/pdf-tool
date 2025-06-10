@@ -124,24 +124,52 @@ build_project() {
 fix_hmr_variables() {
     print_info "修复 Vite HMR 变量..."
     
-    # 查找所有 JS 文件并替换 HMR 变量（分别执行避免语法错误）
-    find "$BUILD_DIR" -name "*.js" -type f -exec sed -i 's/__DEFINES__/{}/g' {} \;
-    find "$BUILD_DIR" -name "*.js" -type f -exec sed -i 's/__HMR_CONFIG_NAME__/null/g' {} \;
-    find "$BUILD_DIR" -name "*.js" -type f -exec sed -i 's/__HMR_PROTOCOL__/null/g' {} \;
-    find "$BUILD_DIR" -name "*.js" -type f -exec sed -i 's/__HMR_HOSTNAME__/null/g' {} \;
-    find "$BUILD_DIR" -name "*.js" -type f -exec sed -i 's/__HMR_PORT__/null/g' {} \;
-    find "$BUILD_DIR" -name "*.js" -type f -exec sed -i 's/__HMR_TIMEOUT__/null/g' {} \;
-    find "$BUILD_DIR" -name "*.js" -type f -exec sed -i 's/__HMR_ENABLE_OVERLAY__/false/g' {} \;
-    find "$BUILD_DIR" -name "*.js" -type f -exec sed -i 's/__HMR_FALLBACK__/false/g' {} \;
-    find "$BUILD_DIR" -name "*.js" -type f -exec sed -i 's/__SERVER_HOST__/null/g' {} \;
-    find "$BUILD_DIR" -name "*.js" -type f -exec sed -i 's/__HMR_DIRECT_TARGET__/null/g' {} \;
-    find "$BUILD_DIR" -name "*.js" -type f -exec sed -i 's/__HMR_BASE__/"\/"/g' {} \;
+    # 使用循环逐个文件处理，避免sed语法问题
+    for js_file in $(find "$BUILD_DIR" -name "*.js" -type f); do
+        # 使用简单的sed替换，避免复杂语法
+        sed -i 's/__DEFINES__/{}/g' "$js_file" 2>/dev/null || true
+        sed -i 's/__HMR_CONFIG_NAME__/null/g' "$js_file" 2>/dev/null || true
+        sed -i 's/__HMR_PROTOCOL__/null/g' "$js_file" 2>/dev/null || true
+        sed -i 's/__HMR_HOSTNAME__/null/g' "$js_file" 2>/dev/null || true
+        sed -i 's/__HMR_PORT__/null/g' "$js_file" 2>/dev/null || true
+        sed -i 's/__HMR_TIMEOUT__/null/g' "$js_file" 2>/dev/null || true
+        sed -i 's/__HMR_ENABLE_OVERLAY__/false/g' "$js_file" 2>/dev/null || true
+        sed -i 's/__HMR_FALLBACK__/false/g' "$js_file" 2>/dev/null || true
+        sed -i 's/__SERVER_HOST__/null/g' "$js_file" 2>/dev/null || true
+        sed -i 's/__HMR_DIRECT_TARGET__/null/g' "$js_file" 2>/dev/null || true
+        sed -i 's/__HMR_BASE__/"\/"/g' "$js_file" 2>/dev/null || true
+    done
     
     # 验证修复结果
     local remaining_vars=$(grep -r "__DEFINES__\|__HMR_" "$BUILD_DIR" --include="*.js" 2>/dev/null | wc -l)
     if [ "$remaining_vars" -gt 0 ]; then
-        print_warning "仍有 $remaining_vars 个未修复的HMR变量"
-        grep -r "__DEFINES__\|__HMR_" "$BUILD_DIR" --include="*.js" | head -3
+        print_warning "仍有 $remaining_vars 个未修复的HMR变量，尝试强制修复..."
+        
+        # 如果仍有问题，使用perl替换（更可靠）
+        for js_file in $(find "$BUILD_DIR" -name "*.js" -type f); do
+            if command -v perl >/dev/null 2>&1; then
+                perl -i -pe 's/__DEFINES__/{}/g' "$js_file" 2>/dev/null || true
+                perl -i -pe 's/__HMR_CONFIG_NAME__/null/g' "$js_file" 2>/dev/null || true
+                perl -i -pe 's/__HMR_PROTOCOL__/null/g' "$js_file" 2>/dev/null || true
+                perl -i -pe 's/__HMR_HOSTNAME__/null/g' "$js_file" 2>/dev/null || true
+                perl -i -pe 's/__HMR_PORT__/null/g' "$js_file" 2>/dev/null || true
+                perl -i -pe 's/__HMR_TIMEOUT__/null/g' "$js_file" 2>/dev/null || true
+                perl -i -pe 's/__HMR_ENABLE_OVERLAY__/false/g' "$js_file" 2>/dev/null || true
+                perl -i -pe 's/__HMR_FALLBACK__/false/g' "$js_file" 2>/dev/null || true
+                perl -i -pe 's/__SERVER_HOST__/null/g' "$js_file" 2>/dev/null || true
+                perl -i -pe 's/__HMR_DIRECT_TARGET__/null/g' "$js_file" 2>/dev/null || true
+                perl -i -pe 's/__HMR_BASE__/"\/"/g' "$js_file" 2>/dev/null || true
+            fi
+        done
+        
+        # 最终验证
+        remaining_vars=$(grep -r "__DEFINES__\|__HMR_" "$BUILD_DIR" --include="*.js" 2>/dev/null | wc -l)
+        if [ "$remaining_vars" -gt 0 ]; then
+            print_error "无法完全修复HMR变量，请手动检查："
+            grep -r "__DEFINES__\|__HMR_" "$BUILD_DIR" --include="*.js" | head -3
+        else
+            print_status "所有HMR变量已修复"
+        fi
     else
         print_status "所有HMR变量已修复"
     fi
