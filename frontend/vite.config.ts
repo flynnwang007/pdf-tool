@@ -78,6 +78,10 @@ export default defineConfig({
     'import.meta.env.MODE': '"production"',
     'import.meta.env.BASE_URL': '"/"',
     
+    // 完全禁用WebSocket连接
+    'import.meta.webSocket': 'undefined',
+    '__VITE_HMR_SOCKET__': 'undefined',
+    
     // 全局对象
     global: 'globalThis'
   },
@@ -112,6 +116,9 @@ export default defineConfig({
     sourcemap: false,
     // 使用esbuild进行代码压缩（更快）
     minify: 'esbuild',
+    // 完全禁用开发工具和HMR
+    target: 'es2015',
+    cssCodeSplit: true,
     rollupOptions: {
       output: {
         manualChunks: {

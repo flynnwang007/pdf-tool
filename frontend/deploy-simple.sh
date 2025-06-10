@@ -60,6 +60,7 @@ content = re.sub(r'__BASE__', '\"/\"', content)
 content = re.sub(r'__VITE_BASE__', '\"/\"', content)
 content = re.sub(r'__VITE_IS_MODERN__', 'true', content)
 content = re.sub(r'__VITE_LEGACY__', 'false', content)
+content = re.sub(r'__VITE_HMR_SOCKET__', 'undefined', content)
 
 with open('$file', 'w', encoding='utf-8') as f:
     f.write(content)
