@@ -43,6 +43,22 @@ export default defineConfig({
     __HMR_BASE__: '"/"',
     __HMR_FALLBACK__: 'false',
     __HMR_DIRECT_TARGET__: 'null',
+    __WS_TOKEN__: 'null',
+    
+    // WebSocket 和 HMR 扩展变量
+    __HMR_WSPORT__: 'null',
+    __HMR_WSSPROTOCOL__: 'null',
+    __HMR_OVERLAY__: 'false',
+    __HMR_ENV_NETWORK__: 'null',
+    __WS_PROTOCOL__: 'null',
+    __WS_PORT__: 'null',
+    __WS_HOST__: 'null',
+    
+    // Vite 开发服务器变量
+    __VITE_ENV__: '"production"',
+    __VITE_DEV__: 'false',
+    __VITE_HMRPORT__: 'null',
+    __VITE_HMRHOST__: 'null',
     
     // 基础路径变量
     __BASE__: '"/"',

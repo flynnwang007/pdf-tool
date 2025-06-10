@@ -32,7 +32,7 @@ import re
 with open('$file', 'r', encoding='utf-8') as f:
     content = f.read()
 
-# 替换所有HMR变量（完整列表）
+# 替换所有HMR变量（完整列表 - 26个变量）
 content = re.sub(r'__DEFINES__', '{}', content)
 content = re.sub(r'__HMR_CONFIG_NAME__', 'null', content)
 content = re.sub(r'__HMR_PROTOCOL__', 'null', content)
@@ -43,6 +43,18 @@ content = re.sub(r'__HMR_ENABLE_OVERLAY__', 'false', content)
 content = re.sub(r'__HMR_FALLBACK__', 'false', content)
 content = re.sub(r'__HMR_DIRECT_TARGET__', 'null', content)
 content = re.sub(r'__HMR_BASE__', '\"/\"', content)
+content = re.sub(r'__WS_TOKEN__', 'null', content)
+content = re.sub(r'__HMR_WSPORT__', 'null', content)
+content = re.sub(r'__HMR_WSSPROTOCOL__', 'null', content)
+content = re.sub(r'__HMR_OVERLAY__', 'false', content)
+content = re.sub(r'__HMR_ENV_NETWORK__', 'null', content)
+content = re.sub(r'__WS_PROTOCOL__', 'null', content)
+content = re.sub(r'__WS_PORT__', 'null', content)
+content = re.sub(r'__WS_HOST__', 'null', content)
+content = re.sub(r'__VITE_ENV__', '\"production\"', content)
+content = re.sub(r'__VITE_DEV__', 'false', content)
+content = re.sub(r'__VITE_HMRPORT__', 'null', content)
+content = re.sub(r'__VITE_HMRHOST__', 'null', content)
 content = re.sub(r'__SERVER_HOST__', 'null', content)
 content = re.sub(r'__BASE__', '\"/\"', content)
 content = re.sub(r'__VITE_BASE__', '\"/\"', content)
@@ -53,8 +65,36 @@ with open('$file', 'w', encoding='utf-8') as f:
     f.write(content)
 print(f'Fixed: $file')
 " 2>/dev/null || {
-            # 如果没有python3，使用sed备用方案
-            sed -i.bak 's/__DEFINES__/{}/g; s/__HMR_CONFIG_NAME__/null/g; s/__HMR_PROTOCOL__/null/g; s/__HMR_HOSTNAME__/null/g; s/__HMR_PORT__/null/g; s/__HMR_TIMEOUT__/null/g; s/__HMR_ENABLE_OVERLAY__/false/g; s/__HMR_FALLBACK__/false/g; s/__HMR_DIRECT_TARGET__/null/g; s|__HMR_BASE__|"/"|g; s/__SERVER_HOST__/null/g; s|__BASE__|"/"|g; s|__VITE_BASE__|"/"|g; s/__VITE_IS_MODERN__/true/g; s/__VITE_LEGACY__/false/g' "$file" 2>/dev/null || true
+            # 如果没有python3，使用sed备用方案（26个变量）
+            sed -i.bak \
+                -e 's/__DEFINES__/{}/g' \
+                -e 's/__HMR_CONFIG_NAME__/null/g' \
+                -e 's/__HMR_PROTOCOL__/null/g' \
+                -e 's/__HMR_HOSTNAME__/null/g' \
+                -e 's/__HMR_PORT__/null/g' \
+                -e 's/__HMR_TIMEOUT__/null/g' \
+                -e 's/__HMR_ENABLE_OVERLAY__/false/g' \
+                -e 's/__HMR_FALLBACK__/false/g' \
+                -e 's/__HMR_DIRECT_TARGET__/null/g' \
+                -e 's|__HMR_BASE__|"/"|g' \
+                -e 's/__WS_TOKEN__/null/g' \
+                -e 's/__HMR_WSPORT__/null/g' \
+                -e 's/__HMR_WSSPROTOCOL__/null/g' \
+                -e 's/__HMR_OVERLAY__/false/g' \
+                -e 's/__HMR_ENV_NETWORK__/null/g' \
+                -e 's/__WS_PROTOCOL__/null/g' \
+                -e 's/__WS_PORT__/null/g' \
+                -e 's/__WS_HOST__/null/g' \
+                -e 's/__VITE_ENV__/"production"/g' \
+                -e 's/__VITE_DEV__/false/g' \
+                -e 's/__VITE_HMRPORT__/null/g' \
+                -e 's/__VITE_HMRHOST__/null/g' \
+                -e 's/__SERVER_HOST__/null/g' \
+                -e 's|__BASE__|"/"|g' \
+                -e 's|__VITE_BASE__|"/"|g' \
+                -e 's/__VITE_IS_MODERN__/true/g' \
+                -e 's/__VITE_LEGACY__/false/g' \
+                "$file" 2>/dev/null || true
             rm -f "$file.bak" 2>/dev/null || true
         }
     fi
