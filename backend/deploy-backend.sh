@@ -34,6 +34,14 @@ echo "✅ 构建成功：$JAR_FILE"
 
 # 启动服务
 echo "🚀 启动后端服务..."
+
+# 生产环境Supabase配置（请根据实际情况设置）
+# export SUPABASE_JWT_SECRET="your-production-supabase-jwt-secret"
+
+# 临时使用开发环境配置（不安全，仅用于测试）
+echo "⚠️  警告: 使用开发环境Supabase配置，生产环境请设置独立的配置"
+export SUPABASE_JWT_SECRET="your-supabase-jwt-secret-here"
+
 nohup java -jar "$JAR_FILE" \
     --spring.profiles.active=prod \
     --server.port=8080 \

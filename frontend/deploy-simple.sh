@@ -9,6 +9,15 @@ echo "🚀 开始部署..."
 export NODE_ENV=production
 export VITE_API_BASE_URL="http://14.103.200.105:8080/api"
 
+# 生产环境Supabase配置（请根据实际情况设置）
+# export VITE_SUPABASE_URL="https://your-production-supabase-url.supabase.co"
+# export VITE_SUPABASE_ANON_KEY="your-production-anon-key"
+
+# 临时使用开发环境Supabase（不安全，仅用于测试）
+echo "⚠️  警告: 使用开发环境Supabase配置，生产环境请设置独立的Supabase实例"
+export VITE_SUPABASE_URL="https://d11558og91hm5619qfbg.baseapi.memfiredb.com"
+export VITE_SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImV4cCI6MzMyNTk3Njk5NSwiaWF0IjoxNzQ5MTc2OTk1LCJpc3MiOiJzdXBhYmFzZSJ9.fqRSc8fZxx5V8SgCWZME-eTuhc2A3bOIOE9iDympXWo"
+
 # 清理
 echo "📦 清理旧文件..."
 rm -rf dist/ node_modules/
