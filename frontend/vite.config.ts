@@ -22,13 +22,29 @@ export default defineConfig({
       resolvers: [ElementPlusResolver()]
     })
   ],
+  define: {
+    __VUE_OPTIONS_API__: 'true',
+    __VUE_PROD_DEVTOOLS__: 'false',
+    __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: 'false'
+  },
   resolve: {
     alias: {
       '@': resolve(__dirname, 'src')
     }
   },
   server: {
+    host: '0.0.0.0',
     port: 3000,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8080',
+        changeOrigin: true
+      }
+    }
+  },
+  preview: {
+    host: '0.0.0.0',
+    port: 4173,
     proxy: {
       '/api': {
         target: 'http://localhost:8080',
@@ -40,6 +56,13 @@ export default defineConfig({
     outDir: 'dist',
     assetsDir: 'assets',
     sourcemap: false,
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true,
+      },
+    },
     rollupOptions: {
       output: {
         manualChunks: {

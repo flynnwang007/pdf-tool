@@ -38,31 +38,18 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: pdf-backend
-    environment:
-      - SPRING_PROFILES_ACTIVE=docker
-      - DB_HOST=postgres
-      - DB_PORT=5432
-      - DB_NAME=pdfapp
-      - DB_USER=pdfuser
-      - DB_PASSWORD=pdfpassword
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-      - JWT_SECRET=your-super-secret-jwt-key-change-in-production
-      - UPLOAD_PATH=/app/uploads
-      - MAX_FILE_SIZE=100MB
-      - TESSERACT_PATH=/usr/bin/tesseract
-      - OCR_LANGUAGES=eng,chi_sim
     ports:
       - "8080:8080"
+    restart: unless-stopped
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+    networks:
+      - pdf-network
     volumes:
-      - upload_data:/app/uploads
-      - temp_data:/tmp/pdf-processing
+      - ./uploads:/app/uploads
     depends_on:
       - postgres
       - redis
-    restart: unless-stopped
-    networks:
-      - pdf-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
       interval: 30s
@@ -75,13 +62,11 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     container_name: pdf-frontend
-    environment:
-      - VITE_API_BASE_URL=http://localhost:8080
     ports:
-      - "3000:80"
+      - "80:80"
+    restart: unless-stopped
     depends_on:
       - pdf-backend
-    restart: unless-stopped
     networks:
       - pdf-network
 
@@ -158,9 +143,7 @@ volumes:
     driver: local
   redis_data:
     driver: local
-  upload_data:
-    driver: local
-  temp_data:
+  uploads:
     driver: local
   minio_data:
     driver: local
