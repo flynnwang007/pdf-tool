@@ -48,14 +48,23 @@ fi
 echo "✅ 构建成功：$JAR_FILE"
 
 # 加载环境变量
-if [ -f "../.env" ]; then
+if [ -f "../setup-env.sh" ]; then
+    echo "📝 加载环境变量..."
+    source ../setup-env.sh
+    echo "✅ 环境变量已加载"
+elif [ -f "../.env" ]; then
     echo "📝 加载.env文件..."
     set -a  # 自动export所有变量
     source ../.env
     set +a
     echo "✅ 环境变量已加载"
 else
-    echo "⚠️  警告: 未找到.env文件，使用默认配置"
+    echo "⚠️  警告: 未找到环境配置文件，手动设置环境变量..."
+    # 手动设置MemFireDB配置
+    export MEMFIRE_JWT_SECRET="0d37e31b-3452-4949-8e19-04bc619c78c9"
+    export VITE_SUPABASE_URL="https://d11558og91hm5619qfbg.baseapi.memfiredb.com"
+    export VITE_SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImQxMTU1OG9nOTFobTU2MTlxZmJnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzMwMjg1NjIsImV4cCI6MjA0ODYwNDU2Mn0.uGGa-pILGX3JHE3KQ8dO8LGOuwzAh5NCmEtKJ9_lGYI"
+    echo "✅ 默认环境变量已设置"
 fi
 
 # 启动服务
