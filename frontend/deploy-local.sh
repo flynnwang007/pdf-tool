@@ -124,20 +124,27 @@ build_project() {
 fix_hmr_variables() {
     print_info "修复 Vite HMR 变量..."
     
-    # 查找所有 JS 文件并替换 HMR 变量
-    find "$BUILD_DIR" -name "*.js" -type f -exec sed -i \
-        -e 's/__HMR_BASE__/"\/"/g' \
-        -e 's/__HMR_CONFIG_NAME__/null/g' \
-        -e 's/__HMR_PROTOCOL__/null/g' \
-        -e 's/__HMR_HOSTNAME__/null/g' \
-        -e 's/__HMR_PORT__/null/g' \
-        -e 's/__HMR_TIMEOUT__/null/g' \
-        -e 's/__HMR_ENABLE_OVERLAY__/false/g' \
-        -e 's/__HMR_FALLBACK__/false/g' \
-        -e 's/__SERVER_HOST__/null/g' \
-        -e 's/__HMR_DIRECT_TARGET__/null/g' \
-        -e 's/__DEFINES__/{}/g' \
-        {} \;
+    # 查找所有 JS 文件并替换 HMR 变量（分别执行避免语法错误）
+    find "$BUILD_DIR" -name "*.js" -type f -exec sed -i 's/__DEFINES__/{}/g' {} \;
+    find "$BUILD_DIR" -name "*.js" -type f -exec sed -i 's/__HMR_CONFIG_NAME__/null/g' {} \;
+    find "$BUILD_DIR" -name "*.js" -type f -exec sed -i 's/__HMR_PROTOCOL__/null/g' {} \;
+    find "$BUILD_DIR" -name "*.js" -type f -exec sed -i 's/__HMR_HOSTNAME__/null/g' {} \;
+    find "$BUILD_DIR" -name "*.js" -type f -exec sed -i 's/__HMR_PORT__/null/g' {} \;
+    find "$BUILD_DIR" -name "*.js" -type f -exec sed -i 's/__HMR_TIMEOUT__/null/g' {} \;
+    find "$BUILD_DIR" -name "*.js" -type f -exec sed -i 's/__HMR_ENABLE_OVERLAY__/false/g' {} \;
+    find "$BUILD_DIR" -name "*.js" -type f -exec sed -i 's/__HMR_FALLBACK__/false/g' {} \;
+    find "$BUILD_DIR" -name "*.js" -type f -exec sed -i 's/__SERVER_HOST__/null/g' {} \;
+    find "$BUILD_DIR" -name "*.js" -type f -exec sed -i 's/__HMR_DIRECT_TARGET__/null/g' {} \;
+    find "$BUILD_DIR" -name "*.js" -type f -exec sed -i 's/__HMR_BASE__/"\/"/g' {} \;
+    
+    # 验证修复结果
+    local remaining_vars=$(grep -r "__DEFINES__\|__HMR_" "$BUILD_DIR" --include="*.js" 2>/dev/null | wc -l)
+    if [ "$remaining_vars" -gt 0 ]; then
+        print_warning "仍有 $remaining_vars 个未修复的HMR变量"
+        grep -r "__DEFINES__\|__HMR_" "$BUILD_DIR" --include="*.js" | head -3
+    else
+        print_status "所有HMR变量已修复"
+    fi
     
     print_status "HMR 变量修复完成"
 }
