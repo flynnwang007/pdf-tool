@@ -13,13 +13,13 @@ export VITE_API_BASE_URL="http://14.103.200.105:8080/api"
 echo "📦 清理旧文件..."
 rm -rf dist/ node_modules/
 
-# 安装依赖
+# 安装依赖（包括devDependencies，因为构建需要vite）
 echo "📦 安装依赖..."
-npm install
+npm install --include=dev
 
 # 构建
 echo "🔨 构建项目..."
-npm run build
+npx vite build
 
 # 修复HMR变量 - 使用最简单的方法
 echo "🔧 修复HMR变量..."
