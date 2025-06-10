@@ -17,14 +17,14 @@ chmod 755 uploads logs
 
 # 清理旧构建
 echo "🧹 清理旧构建..."
-./mvnw clean
+./gradlew clean
 
 # 构建项目
 echo "🔨 构建项目..."
-./mvnw package -DskipTests
+./gradlew build -x test
 
 # 检查JAR文件
-JAR_FILE=$(find target -name "*.jar" -not -name "*sources.jar" | head -1)
+JAR_FILE=$(find build/libs -name "*.jar" -not -name "*plain.jar" | head -1)
 if [ ! -f "$JAR_FILE" ]; then
     echo "❌ 构建失败：找不到JAR文件"
     exit 1
