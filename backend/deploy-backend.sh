@@ -15,6 +15,21 @@ mkdir -p uploads
 mkdir -p logs
 chmod 755 uploads logs
 
+# 检查gradle wrapper
+echo "🔧 检查gradle wrapper..."
+if [ ! -f "gradle/wrapper/gradle-wrapper.jar" ]; then
+    echo "⚠️  gradle-wrapper.jar缺失，正在修复..."
+    # 下载gradle wrapper
+    if command -v gradle > /dev/null 2>&1; then
+        gradle wrapper --gradle-version=8.14.1
+        echo "✅ gradle wrapper已修复"
+    else
+        echo "❌ 错误: gradle命令不可用，无法修复wrapper"
+        echo "请手动运行: gradle wrapper --gradle-version=8.14.1"
+        exit 1
+    fi
+fi
+
 # 清理旧构建
 echo "🧹 清理旧构建..."
 ./gradlew clean
