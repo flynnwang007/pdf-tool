@@ -298,7 +298,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage, ElLoading } from 'element-plus'
+import { ElMessage, ElLoading, ElMessageBox } from 'element-plus'
 import {
   Plus,
   Clock,
@@ -486,6 +486,9 @@ const addFilesToQueue = async (files: File[]) => {
   // 检查登录状态
   const isAuthenticated = await requireAuth('上传文件需要登录，请先登录您的账户。')
   if (!isAuthenticated) {
+    // 记录用户想上传的文件名和大小（File对象不能直接存储，存meta信息即可）
+    const pendingFiles = files.map(f => ({ name: f.name, size: f.size, type: f.type }))
+    sessionStorage.setItem('pendingUploadFiles', JSON.stringify(pendingFiles))
     return
   }
 
@@ -742,6 +745,26 @@ onMounted(() => {
   loadUploadHistory()
   
   window.addEventListener('resize', handleResize)
+  
+  // 登录后自动恢复上传
+  if (isLoggedIn()) {
+    const pending = sessionStorage.getItem('pendingUploadFiles')
+    if (pending) {
+      ElMessageBox.alert(
+        '为保护您的隐私，请重新选择要上传的文件',
+        '温馨提示',
+        {
+          confirmButtonText: '确定',
+          callback: () => {
+            nextTick(() => {
+              fileInput.value?.click()
+            })
+          }
+        }
+      )
+      sessionStorage.removeItem('pendingUploadFiles')
+    }
+  }
   
   // 添加全局样式覆盖
   const style = document.createElement('style')
@@ -1661,5 +1684,45 @@ onUnmounted(() => {
   height: 44px;
   border-radius: 10px;
   font-size: 15px;
+}
+
+/* 微信风格的 MessageBox */
+:deep(.el-message-box) {
+  border-radius: 16px !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12) !important;
+  max-width: 90vw;
+  min-width: 260px;
+  padding: 0 0 16px 0 !important;
+}
+:deep(.el-message-box__header) {
+  padding: 24px 24px 0 24px !important;
+  text-align: center;
+}
+:deep(.el-message-box__title) {
+  font-size: 18px !important;
+  font-weight: 600;
+  color: #1a1a1a;
+  text-align: center;
+}
+:deep(.el-message-box__content) {
+  font-size: 16px !important;
+  color: #333;
+  padding: 20px 24px 0 24px !important;
+  text-align: center;
+}
+:deep(.el-message-box__btns) {
+  justify-content: center !important;
+  padding: 16px 24px 0 24px !important;
+}
+:deep(.el-button--primary) {
+  background: #07c160 !important;
+  border-color: #07c160 !important;
+  border-radius: 24px !important;
+  font-size: 16px !important;
+  min-width: 96px;
+}
+:deep(.el-button--primary):hover {
+  background: #06ad56 !important;
+  border-color: #06ad56 !important;
 }
 </style> 

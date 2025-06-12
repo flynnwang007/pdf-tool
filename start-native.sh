@@ -73,32 +73,8 @@ mkdir -p $PROJECT_ROOT/logs
 print_info "构建后端项目..."
 cd $PROJECT_ROOT/backend
 
-# 检查gradle wrapper是否正常
-if [ ! -f "gradle/wrapper/gradle-wrapper.jar" ] || ! ./gradlew --version >/dev/null 2>&1; then
-    print_warning "Gradle Wrapper损坏，正在修复..."
-    
-    # 检查系统是否有gradle
-    if ! command -v gradle &> /dev/null; then
-        print_info "安装Gradle..."
-        sudo apt update
-        sudo apt install gradle -y
-    fi
-    
-    # 重新生成gradle wrapper
-    print_info "重新生成Gradle Wrapper..."
-    rm -rf gradle/
-    gradle wrapper --gradle-version 8.5
-    chmod +x gradlew
-fi
-
-# 构建项目
-print_info "开始构建后端..."
-if ./gradlew --version >/dev/null 2>&1; then
-    ./gradlew clean build -x test
-else
-    print_warning "使用系统Gradle构建..."
-    gradle clean build -x test
-fi
+print_info "使用系统 Gradle 构建后端..."
+gradle clean build -x test
 
 # 检查jar文件
 JAR_FILE=$(find build/libs -name "*.jar" -not -name "*-plain.jar" | head -1)
@@ -139,8 +115,28 @@ done
 # 构建前端
 print_info "构建前端项目..."
 cd $PROJECT_ROOT/frontend
+
+print_info "清理前端依赖和缓存..."
+rm -rf node_modules package-lock.json
+npm cache clean --force
+
+print_info "安装前端依赖..."
+unset NODE_ENV
 npm install
+npm install vite --save-dev
+
+print_info "开始前端构建..."
 npm run build
+
+# 部署前端静态文件到 nginx 目录
+NGINX_STATIC_DIR="/var/www/pdf-tool"
+print_info "清理 nginx 静态目录旧产物..."
+rm -rf $NGINX_STATIC_DIR/*
+
+print_info "拷贝新前端产物到 nginx 静态目录..."
+cp -r dist/* $NGINX_STATIC_DIR/
+
+print_status "前端构建和部署完成"
 
 # 配置nginx提供前端静态文件
 print_info "配置前端服务..."
