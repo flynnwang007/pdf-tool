@@ -137,18 +137,6 @@
           </div>
 138|
 ...
-const addFilesToQueue = async (files: File[]) => {
-  // 检查登录状态
-  const isAuthenticated = await requireAuth('上传文件需要登录，请先登录您的账户。')
-  if (!isAuthenticated) {
-    // 记录用户想上传的文件名和大小（File对象不能直接存储，存meta信息即可）
-    const pendingFiles = files.map(f => ({ name: f.name, size: f.size, type: f.type }))
-    sessionStorage.setItem('pendingUploadFiles', JSON.stringify(pendingFiles))
-    return
-  }
-  // ...后续逻辑不变
-}
-// ... existing code ...
 onMounted(() => {
   // ...原有逻辑
   loadUploadHistory()
@@ -158,6 +146,7 @@ onMounted(() => {
   if (isLoggedIn()) {
     const pending = sessionStorage.getItem('pendingUploadFiles')
     if (pending) {
+      ElMessage.info('为保护您的隐私，请重新选择要上传的文件')
       nextTick(() => {
         fileInput.value?.click()
       })
