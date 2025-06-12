@@ -370,6 +370,7 @@ import {
 import api from '@/api'
 import { useAuth } from '@/composables/useAuth'
 import LoginPrompt from '@/components/auth/LoginPrompt.vue'
+import { fileApi } from '@/api'
 
 // 文件项类型定义
 interface FileItem {
@@ -669,12 +670,21 @@ const handleFileAction = async ({ action, file }: any) => {
 }
 
 // 文件操作方法
-const downloadFile = (file: any) => {
-  const link = document.createElement('a')
-  link.href = file.url
-  link.download = file.name
-  link.click()
-  ElMessage.success('开始下载文件')
+const downloadFile = async (file: any) => {
+  try {
+    const blob = await fileApi.downloadFile(file.id)
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = file.name
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(url)
+    ElMessage.success('开始下载文件')
+  } catch (error) {
+    ElMessage.error('下载失败，请重试')
+  }
 }
 
 const shareFile = (file: any) => {
