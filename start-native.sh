@@ -121,7 +121,9 @@ rm -rf node_modules package-lock.json
 npm cache clean --force
 
 print_info "安装前端依赖..."
+unset NODE_ENV
 npm install
+npm install vite --save-dev
 
 print_info "开始前端构建..."
 npm run build
