@@ -83,8 +83,13 @@ import { House, Upload, Folder, Tools } from '@element-plus/icons-vue'
 import UserAvatar from '@/components/auth/UserAvatar.vue'
 import LoginPrompt from '@/components/auth/LoginPrompt.vue'
 import { useAuth } from '@/composables/useAuth'
+import { ref } from 'vue'
 
-const { showLoginPrompt, loginPromptMessage, closeLoginPrompt } = useAuth()
+const showLoginPrompt = ref(false)
+const loginPromptMessage = ref('请先登录后再进行操作')
+function closeLoginPrompt() {
+  showLoginPrompt.value = false
+}
 </script>
 
 <style scoped>
@@ -380,5 +385,47 @@ const { showLoginPrompt, loginPromptMessage, closeLoginPrompt } = useAuth()
   .safe-area-bottom {
     padding-bottom: max(6px, env(safe-area-inset-bottom));
   }
+}
+</style>
+
+<style>
+/* 微信风格的 MessageBox */
+.el-message-box {
+  border-radius: 16px !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12) !important;
+  max-width: 90vw;
+  min-width: 260px;
+  padding: 0 0 16px 0 !important;
+}
+.el-message-box__header {
+  padding: 24px 24px 0 24px !important;
+  text-align: center;
+}
+.el-message-box__title {
+  font-size: 18px !important;
+  font-weight: 600;
+  color: #1a1a1a;
+  text-align: center;
+}
+.el-message-box__content {
+  font-size: 16px !important;
+  color: #333;
+  padding: 20px 24px 0 24px !important;
+  text-align: center;
+}
+.el-message-box__btns {
+  justify-content: center !important;
+  padding: 16px 24px 0 24px !important;
+}
+.el-button--primary {
+  background: #07c160 !important;
+  border-color: #07c160 !important;
+  border-radius: 24px !important;
+  font-size: 16px !important;
+  min-width: 96px;
+}
+.el-button--primary:hover {
+  background: #06ad56 !important;
+  border-color: #06ad56 !important;
 }
 </style> 
