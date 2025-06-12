@@ -207,7 +207,7 @@ cd .. && ./deploy-check.sh
 
 ### 服务状态监控
 
-```bash
+   ```bash
 # 检查Java进程
 ps aux | grep java
 

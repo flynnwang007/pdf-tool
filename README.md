@@ -46,7 +46,7 @@
 - **Apache PDFBox** - PDF处理核心
 - **Spring Security** - 安全认证
 - **PostgreSQL/H2** - 数据存储
-- **Docker** - 容器化部署
+- **Nginx** - 反向代理
 
 ### 前端技术栈
 - **Vue.js 3** - 前端框架
@@ -59,7 +59,7 @@
 ### 环境要求
 - Java 17+
 - Node.js 16+
-- Docker (可选)
+- Nginx (生产环境)
 
 ### 本地开发
 
@@ -90,14 +90,14 @@ npm run dev
 - 后端API: http://localhost:8080
 - API文档: http://localhost:8080/swagger-ui.html
 
-### Docker部署
+### 生产部署
 
 ```bash
-# 构建并启动
-docker-compose up --build
+# 一键部署到生产环境
+./start-native.sh
 
-# 后台运行
-docker-compose up -d
+# 或使用完整部署脚本
+./deploy-native.sh
 ```
 
 ## 📁 项目结构
@@ -112,8 +112,8 @@ pdf_tool/
 │   ├── src/
 │   ├── public/
 │   └── package.json
-├── docker-compose.yml       # Docker编排文件
-├── Dockerfile              # Docker镜像构建
+├── start-native.sh          # 生产环境启动脚本
+├── deploy-native.sh         # 完整部署脚本
 └── README.md
 ```
 

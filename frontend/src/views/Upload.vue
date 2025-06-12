@@ -285,6 +285,13 @@
         </div>
       </div>
     </el-dialog>
+
+    <!-- 登录提示对话框 -->
+    <LoginPrompt 
+      v-model="showLoginPrompt"
+      :message="loginPromptMessage"
+      @cancel="closeLoginPrompt"
+    />
   </div>
 </template>
 
@@ -303,8 +310,11 @@ import {
   Upload as UploadIcon
 } from '@element-plus/icons-vue'
 import api from '@/api'
+import { useAuth } from '@/composables/useAuth'
+import LoginPrompt from '@/components/auth/LoginPrompt.vue'
 
 const router = useRouter()
+const { requireAuth, showLoginPrompt, loginPromptMessage, closeLoginPrompt, isLoggedIn } = useAuth()
 
 // 响应式数据
 const isDragOver = ref(false)
@@ -437,23 +447,23 @@ const triggerFileInput = () => {
   }
 }
 
-const handleFileSelect = (event: Event) => {
+const handleFileSelect = async (event: Event) => {
   const target = event.target as HTMLInputElement
   if (target.files) {
     const files = Array.from(target.files)
-    addFilesToQueue(files)
+    await addFilesToQueue(files)
     target.value = '' // 清空input
   }
 }
 
-const handleDrop = (event: DragEvent) => {
+const handleDrop = async (event: DragEvent) => {
   event.preventDefault()
   isDragOver.value = false
   
   if (isUploading.value) return
   
   const files = Array.from(event.dataTransfer?.files || [])
-  addFilesToQueue(files)
+  await addFilesToQueue(files)
 }
 
 const handleDragOver = () => {
@@ -472,7 +482,13 @@ const handleDragLeave = () => {
   isDragOver.value = false
 }
 
-const addFilesToQueue = (files: File[]) => {
+const addFilesToQueue = async (files: File[]) => {
+  // 检查登录状态
+  const isAuthenticated = await requireAuth('上传文件需要登录，请先登录您的账户。')
+  if (!isAuthenticated) {
+    return
+  }
+
   const validFiles = files.filter(file => {
     // 检查文件大小
     if (file.size > maxSize) {
@@ -623,6 +639,12 @@ const continueUpload = async () => {
 
 // 加载上传历史
 const loadUploadHistory = async () => {
+  // 如果用户未登录，显示空历史记录
+  if (!isLoggedIn()) {
+    uploadHistory.value = []
+    return
+  }
+
   try {
     const response = await api.files.getAll()
     if (response.success) {
@@ -653,7 +675,10 @@ const loadUploadHistory = async () => {
     }
   } catch (error) {
     console.error('加载上传历史出错:', error)
-    ElMessage.error('加载上传历史失败')
+    // 只有在已登录状态下才显示错误消息
+    if (isLoggedIn()) {
+      ElMessage.error('加载上传历史失败')
+    }
   }
 }
 

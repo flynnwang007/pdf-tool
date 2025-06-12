@@ -767,6 +767,13 @@
         </div>
       </template>
     </el-dialog>
+
+    <!-- 登录提示对话框 -->
+    <LoginPrompt 
+      v-model="showLoginPrompt"
+      :message="loginPromptMessage"
+      @cancel="closeLoginPrompt"
+    />
   </div>
 </template>
 
@@ -775,6 +782,11 @@ import { ref, computed, nextTick, onMounted, onUnmounted } from 'vue'
 import { ElMessage, ElLoading } from 'element-plus'
 import { ArrowRight, Close, Loading, Check } from '@element-plus/icons-vue'
 import { pdfApi, fileApi, utils } from '@/api'
+import { useAuth } from '@/composables/useAuth'
+import LoginPrompt from '@/components/auth/LoginPrompt.vue'
+
+// 认证相关
+const { requireAuth, showLoginPrompt, loginPromptMessage, closeLoginPrompt } = useAuth()
 
 // 响应式数据
 const showToolDialog = ref(false)
@@ -1177,6 +1189,12 @@ const formatFileSize = (bytes: number): string => {
 }
 
 const startProcessing = async () => {
+  // 检查登录状态
+  const isAuthenticated = await requireAuth('使用PDF工具需要登录，请先登录您的账户。')
+  if (!isAuthenticated) {
+    return
+  }
+
   if (selectedFiles.value.length === 0 && selectedExistingFileIds.value.length === 0) {
     ElMessage.warning('请先选择要处理的文件')
     return
@@ -1276,6 +1294,38 @@ const startProcessing = async () => {
 
 // 处理单个文件的函数
 const processFile = async (file: File | null, fileId: string | null) => {
+  // 移动端特殊检查
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+  if (isMobile && file) {
+    console.log('[移动端检查] 设备类型: 移动端, 文件:', file.name, '大小:', file.size, '类型:', file.type)
+    
+    // 检查文件大小（移动端建议限制更小）
+    const maxSizeMB = 50 // 移动端50MB限制
+    if (file.size > maxSizeMB * 1024 * 1024) {
+      throw new Error(`移动端文件大小不能超过${maxSizeMB}MB，当前文件大小: ${(file.size / 1024 / 1024).toFixed(1)}MB`)
+    }
+    
+    // 检查网络连接
+    if (navigator.onLine === false) {
+      throw new Error('网络连接异常，请检查网络后重试')
+    }
+    
+    // OCR特殊检查
+    if (selectedTool.value.id === 'ocr') {
+      // 检查是否是支持的文件格式
+      const supportedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png', 'image/tiff', 'image/bmp']
+      if (!supportedTypes.includes(file.type)) {
+        console.error('[移动端OCR] 不支持的文件类型:', file.type)
+        throw new Error(`移动端OCR不支持此文件格式: ${file.type}，请选择PDF或图片文件`)
+      }
+      
+      // 图片文件大小特殊限制
+      if (file.type.startsWith('image/') && file.size > 20 * 1024 * 1024) {
+        throw new Error('移动端图片OCR文件大小不能超过20MB')
+      }
+    }
+  }
+  
   let result
   
   switch (selectedTool.value.id) {
@@ -1628,20 +1678,28 @@ const processFile = async (file: File | null, fileId: string | null) => {
 
     case 'ocr':
       if (fileId) {
+        console.log('[OCR Debug] 使用已有文件ID:', fileId, '语言:', toolParams.value.ocrLanguage)
         result = await pdfApi.performOcrById(parseInt(fileId), toolParams.value.ocrLanguage)
       } else if (file) {
         // 新上传文件的OCR功能：先上传文件获取fileId，然后调用OCR API
         try {
+          console.log('[OCR Debug] 开始上传文件:', file.name, '大小:', file.size, '类型:', file.type)
           currentProcessingFile.value = `正在上传 ${file.name}...`
           const uploadResult = await fileApi.uploadFile(file)
+          console.log('[OCR Debug] 上传结果:', uploadResult)
+          
           if (uploadResult.success) {
             const uploadedFileId = uploadResult.data.fileId
+            console.log('[OCR Debug] 文件上传成功，开始OCR识别，文件ID:', uploadedFileId)
             currentProcessingFile.value = `正在识别文字 ${file.name}...`
             result = await pdfApi.performOcrById(parseInt(uploadedFileId), toolParams.value.ocrLanguage)
+            console.log('[OCR Debug] OCR识别结果:', result)
           } else {
+            console.error('[OCR Debug] 文件上传失败:', uploadResult)
             throw new Error(`上传文件失败: ${uploadResult.message || '未知错误'}`)
           }
         } catch (error: any) {
+          console.error('[OCR Debug] OCR处理异常:', error)
           throw new Error(`处理文件失败: ${error.message}`)
         }
       }
@@ -2159,6 +2217,41 @@ const handleResize = () => {
 onMounted(() => {
   window.addEventListener('resize', handleResize)
   
+  // 移动端网络监听
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+  if (isMobile) {
+    console.log('[移动端初始化] 开始设置移动端特殊处理')
+    
+    // 监听网络状态变化
+    window.addEventListener('online', () => {
+      console.log('[移动端网络] 网络已连接')
+      ElMessage.success('网络已恢复，可以继续处理文件')
+    })
+    
+    window.addEventListener('offline', () => {
+      console.log('[移动端网络] 网络已断开')
+      ElMessage.warning('网络连接已断开，请检查网络后重试')
+      
+      // 如果正在处理，显示警告
+      if (isProcessing.value) {
+        ElMessage.error('网络断开，建议稍后重试')
+      }
+    })
+    
+    // 监听页面可见性变化（移动端后台切换）
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        console.log('[移动端] 应用进入后台')
+      } else {
+        console.log('[移动端] 应用回到前台')
+        // 检查网络状态
+        if (!navigator.onLine) {
+          ElMessage.warning('网络连接异常，请检查网络')
+        }
+      }
+    })
+  }
+  
   // 添加全局样式覆盖
   const style = document.createElement('style')
   style.innerHTML = `
@@ -2183,6 +2276,14 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.removeEventListener('resize', handleResize)
+  
+  // 清理移动端监听器
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+  if (isMobile) {
+    window.removeEventListener('online', () => {})
+    window.removeEventListener('offline', () => {})
+    document.removeEventListener('visibilitychange', () => {})
+  }
 })
 </script>
 

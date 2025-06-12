@@ -4,37 +4,77 @@
 
 set -e
 
-echo "🚀 启动PDF工具应用开发环境..."
+echo "🚀 启动本地开发环境..."
 
-# 检查Docker是否运行
-if ! docker info > /dev/null 2>&1; then
-    echo "❌ Docker未运行，请先启动Docker"
+# 加载.env文件到环境变量
+if [ -f .env ]; then
+    echo "📝 加载 .env 文件..."
+    export $(grep -v '^#' .env | xargs)
+    echo "✅ 环境变量已加载"
+    echo "🔑 MEMFIRE_JWT_SECRET: ${MEMFIRE_JWT_SECRET:0:8}..."
+    echo "🌐 API地址: $VITE_API_BASE_URL"
+else
+    echo "❌ .env 文件不存在"
     exit 1
 fi
 
-# 启动基础服务
-echo "📦 启动基础服务 (PostgreSQL, Redis, MinIO)..."
-docker-compose -f docker-compose.dev.yml up -d
+# 停止可能运行的进程
+echo "🛑 停止现有进程..."
+pkill -f "gradlew bootRun" 2>/dev/null || true
+pkill -f "npm run dev" 2>/dev/null || true
+sleep 2
 
-# 等待数据库启动
-echo "⏳ 等待数据库启动..."
-sleep 10
+# 启动后端
+echo "🔧 启动后端服务器..."
+cd backend
+./gradlew bootRun &
+BACKEND_PID=$!
+cd ..
 
-# 检查服务状态
-echo "🔍 检查服务状态..."
-docker-compose -f docker-compose.dev.yml ps
+# 等待后端启动
+echo "⏳ 等待后端启动..."
+for i in {1..30}; do
+    if curl -f http://localhost:8080/actuator/health >/dev/null 2>&1; then
+        echo "✅ 后端服务器启动成功 (${i}s)"
+        break
+    fi
+    if [ $i -eq 30 ]; then
+        echo "❌ 后端启动超时"
+        kill $BACKEND_PID 2>/dev/null || true
+        exit 1
+    fi
+    sleep 1
+done
 
-echo "✅ 基础服务启动完成！"
+# 启动前端
+echo "🌐 启动前端服务器..."
+cd frontend
+npm run dev &
+FRONTEND_PID=$!
+cd ..
+
 echo ""
-echo "📊 服务访问地址："
-echo "  PostgreSQL: localhost:5432"
-echo "  Redis: localhost:6379"
-echo "  MinIO Console: http://localhost:9001"
-echo "    用户名: admin"
-echo "    密码: admin123"
+echo "🎉 开发环境启动完成！"
+echo "📱 前端地址: http://localhost:3000"
+echo "🔧 后端地址: http://localhost:8080"
+echo "📊 健康检查: http://localhost:8080/actuator/health"
 echo ""
-echo "🛠️  接下来可以启动后端和前端服务："
-echo "  后端: cd backend && ./gradlew bootRun"
-echo "  前端: cd frontend && npm run dev"
+echo "📝 进程PID:"
+echo "  后端: $BACKEND_PID"
+echo "  前端: $FRONTEND_PID"
 echo ""
-echo "🛑 停止服务: ./stop-dev.sh" 
+echo "💡 按 Ctrl+C 停止服务"
+
+# 创建停止函数
+cleanup() {
+    echo ""
+    echo "🛑 正在停止服务..."
+    kill $BACKEND_PID $FRONTEND_PID 2>/dev/null || true
+    exit 0
+}
+
+# 捕获中断信号
+trap cleanup INT TERM
+
+# 等待进程
+wait 

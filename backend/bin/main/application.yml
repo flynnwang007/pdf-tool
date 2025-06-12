@@ -100,7 +100,7 @@ app:
 # Supabase配置
 supabase:
   jwt:
-    secret: ${SUPABASE_JWT_SECRET:your-supabase-jwt-secret-here}
+    secret: ${MEMFIRE_JWT_SECRET:your-memfire-jwt-secret-here}
 
 # 监控配置
 management:

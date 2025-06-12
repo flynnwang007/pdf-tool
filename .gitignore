@@ -121,11 +121,9 @@ coverage/
 .vscode-test
 
 # Cursor IDE
-.cursor/
+.cursor/ 
 
-# Docker镜像文件
-docker-images/*.tar
-docker-images/*.tar.gz
+
 
 # 构建压缩包
 *.tar.gz

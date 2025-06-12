@@ -42,16 +42,16 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
                     String userId = claims.getSubject();
                     String email = (String) claims.get("email");
                     
-                    // 创建认证对象
+                // 创建认证对象
                     SupabaseUserPrincipal principal = new SupabaseUserPrincipal(userId, email);
-                    UsernamePasswordAuthenticationToken authentication = 
-                        new UsernamePasswordAuthenticationToken(
-                            principal, 
+                UsernamePasswordAuthenticationToken authentication = 
+                    new UsernamePasswordAuthenticationToken(
+                        principal, 
                             token, 
-                            Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"))
-                        );
-                    
-                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                        Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"))
+                    );
+                
+                SecurityContextHolder.getContext().setAuthentication(authentication);
                     logger.debug("用户认证成功: {}", userId);
                 } else {
                     logger.warn("JWT令牌验证失败");

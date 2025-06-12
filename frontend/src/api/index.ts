@@ -1,13 +1,19 @@
 import axios from 'axios'
 import { useAuthStore } from '@/stores/auth'
 
-// API基础配置 - 支持环境变量
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://14.103.200.105:8080/api'
+// API基础配置 - 使用环境变量
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api'
+console.log('[API Config] 环境:', import.meta.env.MODE, '| API地址:', API_BASE_URL)
+
+// 检测移动端，设置不同的超时时间
+const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+const timeoutDuration = isMobile ? 300000 : 120000 // 移动端5分钟，桌面端2分钟
+console.log('[API Config] 设备类型:', isMobile ? '移动端' : '桌面端', '超时时间:', timeoutDuration + 'ms')
 
 // 创建axios实例
 const api = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 30000, // 30秒超时
+  timeout: timeoutDuration,
   headers: {
     'Content-Type': 'multipart/form-data'
   }
@@ -78,11 +84,18 @@ export const fileApi = {
 
   // 上传文件
   uploadFile: async (file: File) => {
+    console.log('[Upload Debug] 准备上传文件:', file.name, '大小:', file.size, '类型:', file.type)
     const formData = new FormData()
     formData.append('file', file)
     
-    const response = await api.post('/files/upload', formData)
-    return response.data
+    try {
+      const response = await api.post('/files/upload', formData)
+      console.log('[Upload Debug] 上传响应:', response.data)
+      return response.data
+    } catch (error: any) {
+      console.error('[Upload Debug] 上传失败:', error)
+      throw error
+    }
   },
 
   // 下载文件
@@ -287,10 +300,20 @@ export const pdfApi = {
 
   // OCR文字识别 - 基于文件ID
   performOcrById: async (fileId: string | number, language = 'eng') => {
-    const response = await api.post(`/pdf-tools/ocr/${fileId}?language=${language}`, {}, {
-      headers: { 'Content-Type': 'application/json' }
-    })
-    return response.data
+    console.log('[OCR API Debug] 开始OCR识别，文件ID:', fileId, '语言:', language)
+    try {
+      const response = await api.post(`/pdf-tools/ocr/${fileId}?language=${language}`, {}, {
+        headers: { 'Content-Type': 'application/json' }
+      })
+      console.log('[OCR API Debug] OCR响应:', response.data)
+      return response.data
+    } catch (error: any) {
+      console.error('[OCR API Debug] OCR失败:', error)
+      if (error.response) {
+        console.error('[OCR API Debug] 错误响应:', error.response.data)
+      }
+      throw error
+    }
   },
 
   // PDF信息分析

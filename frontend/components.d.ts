@@ -34,6 +34,7 @@ declare module 'vue' {
     ElUpload: typeof import('element-plus/es')['ElUpload']
     ForgotPasswordForm: typeof import('./src/components/auth/ForgotPasswordForm.vue')['default']
     LoginForm: typeof import('./src/components/auth/LoginForm.vue')['default']
+    LoginPrompt: typeof import('./src/components/auth/LoginPrompt.vue')['default']
     PdfConverter: typeof import('./src/components/PdfConverter.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']

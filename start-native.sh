@@ -29,6 +29,16 @@ print_info() {
 
 echo "🚀 PDF工具原生部署启动..."
 
+# 加载环境变量
+if [ -f ".env" ]; then
+    print_info "加载环境变量..."
+    export $(grep -v '^#' .env | xargs)
+    print_status "环境变量已加载"
+    print_info "JWT密钥长度: $(echo -n "$MEMFIRE_JWT_SECRET" | wc -c) 字符"
+else
+    print_warning ".env文件不存在，使用默认配置"
+fi
+
 # 检查环境
 print_info "检查运行环境..."
 

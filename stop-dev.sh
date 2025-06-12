@@ -4,8 +4,10 @@
 
 echo "🛑 停止PDF工具应用开发环境..."
 
-# 停止并删除容器
-docker-compose -f docker-compose.dev.yml down
+# 停止原生服务进程
+pkill -f 'npm run dev' 2>/dev/null || true
+pkill -f 'gradlew bootRun' 2>/dev/null || true
+pkill -f 'pdf-tool' 2>/dev/null || true
 
 echo "✅ 开发环境已停止"
 echo ""

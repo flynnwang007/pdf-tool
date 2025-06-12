@@ -16,8 +16,7 @@ const routes: RouteRecordRaw[] = [
     name: 'Upload',
     component: () => import('@/views/Upload.vue'),
     meta: {
-      title: '文件上传',
-      requiresAuth: true
+      title: '文件上传'
     }
   },
   {
@@ -25,8 +24,7 @@ const routes: RouteRecordRaw[] = [
     name: 'Files',
     component: () => import('@/views/Files.vue'),
     meta: {
-      title: '文件管理',
-      requiresAuth: true
+      title: '文件管理'
     }
   },
   {
@@ -34,8 +32,7 @@ const routes: RouteRecordRaw[] = [
     name: 'Tools',
     component: () => import('@/views/Tools.vue'),
     meta: {
-      title: 'PDF工具',
-      requiresAuth: true
+      title: 'PDF工具'
     }
   },
   // 认证相关路由
@@ -106,7 +103,7 @@ router.beforeEach(async (to, from, next) => {
     document.title = `${to.meta.title} - PDF工具`
   }
   
-  // 检查是否需要认证
+  // 检查是否需要认证（现在只有少数页面需要强制登录）
   if (to.meta?.requiresAuth && !authStore.isAuthenticated) {
     // 保存用户想要访问的页面，登录后跳转
     next({

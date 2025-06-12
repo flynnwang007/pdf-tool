@@ -30,7 +30,7 @@
           <el-tag
             v-for="filter in quickFilters"
             :key="filter.key"
-            :type="filter.active ? 'success' : ''"
+            :type="filter.active ? 'success' : undefined"
             :effect="filter.active ? 'dark' : 'plain'"
             class="filter-tag"
             @click="toggleQuickFilter(filter)"
@@ -84,17 +84,30 @@
     <div class="files-section">
       <el-empty 
         v-if="filteredFiles.length === 0" 
-        description="暂无文件"
+        :description="isLoggedIn() ? '暂无文件' : '登录后查看您的文件'"
         class="empty-state"
       >
         <template #image>
-          <div class="empty-icon">📁</div>
+          <div class="empty-icon">{{ isLoggedIn() ? '📁' : '🔐' }}</div>
         </template>
         <template #description>
-          <span class="empty-text">暂无文件</span>
+          <span class="empty-text">{{ isLoggedIn() ? '暂无文件' : '登录后查看您的文件' }}</span>
         </template>
-        <el-button type="primary" @click="navigateTo('/upload')" class="upload-btn">
+        <el-button 
+          v-if="isLoggedIn()" 
+          type="primary" 
+          @click="navigateTo('/upload')" 
+          class="upload-btn"
+        >
           上传文件
+        </el-button>
+        <el-button 
+          v-else 
+          type="primary" 
+          @click="requireAuth('查看文件需要登录，请先登录您的账户。')" 
+          class="login-btn"
+        >
+          立即登录
         </el-button>
       </el-empty>
 
@@ -324,6 +337,13 @@
         </div>
       </template>
     </el-dialog>
+
+    <!-- 登录提示对话框 -->
+    <LoginPrompt 
+      v-model="showLoginPrompt"
+      :message="loginPromptMessage"
+      @cancel="closeLoginPrompt"
+    />
   </div>
 </template>
 
@@ -348,6 +368,8 @@ import {
   RefreshRight
 } from '@element-plus/icons-vue'
 import api from '@/api'
+import { useAuth } from '@/composables/useAuth'
+import LoginPrompt from '@/components/auth/LoginPrompt.vue'
 
 // 文件项类型定义
 interface FileItem {
@@ -364,6 +386,7 @@ interface FileItem {
 
 const router = useRouter()
 const route = useRoute()
+const { requireAuth, showLoginPrompt, loginPromptMessage, closeLoginPrompt, isLoggedIn } = useAuth()
 
 // 强制应用移动端样式的方法
 const applyMobileDialogStyles = () => {
@@ -614,7 +637,15 @@ const toggleFileSelection = (fileId: number) => {
   }
 }
 
-const handleFileAction = ({ action, file }: any) => {
+const handleFileAction = async ({ action, file }: any) => {
+  // 对于需要登录的操作，先检查登录状态
+  if (['download', 'share', 'favorite', 'rename', 'delete'].includes(action)) {
+    const isAuthenticated = await requireAuth('此操作需要登录，请先登录您的账户。')
+    if (!isAuthenticated) {
+      return
+    }
+  }
+
   switch (action) {
     case 'preview':
       showFilePreview(file)
@@ -825,6 +856,12 @@ const refreshFiles = async () => {
 
 // 加载文件列表
 const loadFiles = async () => {
+  // 如果用户未登录，显示空列表
+  if (!isLoggedIn()) {
+    files.value = []
+    return
+  }
+
   try {
     const response = await api.files.getAll()
     if (response.success) {

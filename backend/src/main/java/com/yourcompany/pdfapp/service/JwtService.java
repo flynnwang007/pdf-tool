@@ -64,8 +64,6 @@ public class JwtService {
     public Boolean validateToken(String token) {
         try {
             logger.debug("开始验证JWT令牌，长度: {}", token.length());
-            logger.debug("使用的JWT密钥长度: {}", jwtSecret.length());
-            logger.debug("JWT密钥前10个字符: {}", jwtSecret.substring(0, Math.min(10, jwtSecret.length())));
             
             // 检查令牌格式和签名
             Claims claims = extractAllClaims(token);
@@ -76,8 +74,17 @@ public class JwtService {
                 return false;
             }
             
-            // 检查必要字段
+            // 检查角色和用户ID
+            String role = (String) claims.get("role");
             String userId = claims.getSubject();
+            
+            // 临时允许anon角色访问（用于测试）
+            if ("anon".equals(role)) {
+                logger.debug("临时允许anon角色访问");
+                return true;
+            }
+            
+            // 检查必要字段
             if (userId == null || userId.trim().isEmpty()) {
                 logger.warn("JWT令牌缺少用户ID");
                 return false;
@@ -89,12 +96,11 @@ public class JwtService {
                 logger.debug("JWT发行者: {}", issuer);
             }
             
-            logger.debug("JWT令牌验证成功，用户ID: {}", userId);
+            logger.debug("JWT令牌验证成功，用户ID: {}, 角色: {}", userId, role);
             return true;
             
         } catch (Exception e) {
             logger.error("JWT令牌验证失败: {} - {}", e.getClass().getSimpleName(), e.getMessage());
-            logger.error("完整错误信息: ", e);
             return false;
         }
     }

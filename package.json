@@ -1,0 +1,17 @@
+{
+  "name": "pdf_tool",
+  "version": "1.0.0",
+  "description": "基于Stirling-PDF设计理念开发的现代化PDF处理工具，提供全面的PDF操作功能。",
+  "main": "test-upload.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.9.0",
+    "form-data": "^4.0.3",
+    "jsonwebtoken": "^9.0.2"
+  }
+}

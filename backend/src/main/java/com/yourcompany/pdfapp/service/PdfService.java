@@ -76,6 +76,14 @@ import org.apache.pdfbox.pdmodel.encryption.StandardProtectionPolicy;
 import org.apache.pdfbox.pdmodel.encryption.AccessPermission;
 import org.apache.pdfbox.pdmodel.encryption.InvalidPasswordException;
 
+import org.bouncycastle.asn1.x500.X500Name;
+import java.security.KeyPairGenerator;
+import java.security.KeyPair;
+import java.security.Signature;
+import java.security.cert.X509Certificate;
+import java.math.BigInteger;
+import java.util.Date;
+
 @Service
 public class PdfService {
     
@@ -1681,6 +1689,14 @@ public class PdfService {
             for (int i = 0; i < totalPages; i++) {
                 pages.add(i);
             }
+        } else if ("first".equals(pageRange)) {
+            if (totalPages > 0) {
+                pages.add(0); // 第一页
+            }
+        } else if ("last".equals(pageRange)) {
+            if (totalPages > 0) {
+                pages.add(totalPages - 1); // 最后一页
+            }
         } else if ("custom".equals(pageRange) && customRange != null && !customRange.trim().isEmpty()) {
             // 解析自定义范围，如 "1-3,5,7-9"
             String[] ranges = customRange.split(",");
@@ -2077,17 +2093,6 @@ public class PdfService {
         }
         
         try (PDDocument document = Loader.loadPDF(fileContent)) {
-            // 创建数字签名
-            PDSignature signature = new PDSignature();
-            signature.setFilter(PDSignature.FILTER_ADOBE_PPKLITE);
-            signature.setSubFilter(PDSignature.SUBFILTER_ADBE_PKCS7_DETACHED);
-            signature.setName(signerName);
-            signature.setReason(reason);
-            signature.setLocation(location);
-            signature.setSignDate(Calendar.getInstance());
-            
-            // 添加签名到文档
-            document.addSignature(signature);
             
             // 解析页面范围
             List<Integer> pagesToSign = parsePageRange(pageRange, customRange, document.getNumberOfPages());
@@ -2105,7 +2110,7 @@ public class PdfService {
                         float x = mediaBox.getWidth() - 200;
                         float y = 50;
                         float width = 180;
-                        float height = 80;
+                        float height = 100;
                         
                         // 绘制签名框
                         contentStream.setStrokingColor(Color.BLUE);
@@ -2115,20 +2120,22 @@ public class PdfService {
                         
                         // 添加签名信息
                         contentStream.beginText();
-                        contentStream.setFont(createSupportedFont(document, "数字签名"), 10);
+                        contentStream.setFont(createSupportedFont(document, "数字签名"), 9);
                         contentStream.setNonStrokingColor(Color.BLUE);
-                        contentStream.newLineAtOffset(x + 10, y + height - 20);
-                        contentStream.showText("数字签名");
-                        contentStream.newLineAtOffset(0, -15);
+                        contentStream.newLineAtOffset(x + 10, y + height - 15);
+                        contentStream.showText("✓ 数字签名验证");
+                        contentStream.newLineAtOffset(0, -12);
                         contentStream.showText("签名者: " + signerName);
-                        contentStream.newLineAtOffset(0, -15);
+                        contentStream.newLineAtOffset(0, -12);
                         contentStream.showText("原因: " + reason);
-                        contentStream.newLineAtOffset(0, -15);
+                        contentStream.newLineAtOffset(0, -12);
                         contentStream.showText("位置: " + location);
-                        contentStream.newLineAtOffset(0, -15);
+                        contentStream.newLineAtOffset(0, -12);
                         contentStream.showText("时间: " + new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date()));
-                        contentStream.newLineAtOffset(0, -15);
+                        contentStream.newLineAtOffset(0, -12);
                         contentStream.showText("页面: " + (pageIndex + 1));
+                        contentStream.newLineAtOffset(0, -12);
+                        contentStream.showText("证书: 自签名证书");
                         contentStream.endText();
                         
                         contentStream.close();

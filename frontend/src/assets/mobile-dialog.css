@@ -14,6 +14,9 @@
     left: 50% !important;
     transform: translateX(-50%) !important;
     position: fixed !important;
+    max-height: 82vh !important;
+    display: flex !important;
+    flex-direction: column !important;
   }
   
   /* 特定类名的弹窗 */
@@ -29,24 +32,35 @@
     left: 50% !important;
     transform: translateX(-50%) !important;
     position: fixed !important;
+    max-height: 82vh !important;
+    display: flex !important;
+    flex-direction: column !important;
   }
   
   /* 弹窗内容优化 */
   .el-dialog__header {
     padding: 12px 16px 8px !important;
     border-radius: 12px 12px 0 0 !important;
+    flex-shrink: 0 !important;
+    border-bottom: 1px solid #f0f0f0 !important;
   }
   
   .el-dialog__body {
     padding: 8px 16px !important;
-    max-height: calc(90vh - 120px) !important;
+    flex: 1 !important;
     overflow-y: auto !important;
+    overflow-x: hidden !important;
     -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior: contain !important;
+    min-height: 0 !important;
+    position: relative !important;
   }
   
   .el-dialog__footer {
     padding: 8px 16px 16px !important;
     border-radius: 0 0 12px 12px !important;
+    flex-shrink: 0 !important;
+    border-top: 1px solid #f0f0f0 !important;
   }
   
   .el-dialog__title {
@@ -74,6 +88,9 @@
     left: 50% !important;
     transform: translateX(-50%) !important;
     position: fixed !important;
+    max-height: 88vh !important;
+    display: flex !important;
+    flex-direction: column !important;
   }
   
   .tool-dialog .el-overlay .el-overlay-dialog .el-dialog,
@@ -88,6 +105,9 @@
     left: 50% !important;
     transform: translateX(-50%) !important;
     position: fixed !important;
+    max-height: 88vh !important;
+    display: flex !important;
+    flex-direction: column !important;
   }
   
   .el-dialog__header {
@@ -97,12 +117,20 @@
   
   .el-dialog__body {
     padding: 6px 12px !important;
-    max-height: calc(95vh - 100px) !important;
+    flex: 1 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior: contain !important;
+    min-height: 0 !important;
+    position: relative !important;
   }
   
   .el-dialog__footer {
     padding: 6px 12px 12px !important;
     border-radius: 0 0 8px 8px !important;
+    flex-shrink: 0 !important;
+    border-top: 1px solid #f0f0f0 !important;
   }
   
   .el-dialog__title {
@@ -174,6 +202,78 @@
   }
   
   .el-dialog__body {
-    max-height: calc(96vh - 120px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)) !important;
+    overflow-y: auto !important;
+  }
+}
+
+/* 针对工具弹窗的特殊优化 */
+@media (max-width: 768px) {
+  .tool-dialog .el-dialog__body {
+    padding: 12px 16px !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior: contain !important;
+  }
+  
+  .tool-dialog .file-upload-area {
+    margin-bottom: 12px !important;
+  }
+  
+  .tool-dialog .tool-options {
+    margin-bottom: 12px !important;
+  }
+  
+  .tool-dialog .el-form-item {
+    margin-bottom: 12px !important;
+  }
+  
+  .tool-dialog .el-radio-group {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+  
+  .tool-dialog .el-radio {
+    height: auto !important;
+    line-height: 1.4 !important;
+    margin-right: 0 !important;
+    margin-bottom: 8px !important;
+  }
+}
+
+/* 确保内容区域能够正确滚动 */
+@media (max-width: 768px) {
+  .el-dialog__body .tool-content,
+  .el-dialog__body .file-selection,
+  .el-dialog__body .tool-options,
+  .el-dialog__body .options-list {
+    position: relative !important;
+    z-index: 1 !important;
+  }
+  
+  /* 防止元素溢出 */
+  .el-dialog__body * {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+}
+
+/* 强制滚动条样式 - WebKit */
+@media (max-width: 768px) {
+  .el-dialog__body::-webkit-scrollbar {
+    width: 4px !important;
+  }
+  
+  .el-dialog__body::-webkit-scrollbar-track {
+    background: transparent !important;
+  }
+  
+  .el-dialog__body::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2) !important;
+    border-radius: 2px !important;
+  }
+  
+  .el-dialog__body::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.3) !important;
   }
 } 

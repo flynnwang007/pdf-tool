@@ -68,12 +68,23 @@
         </div>
       </div>
     </div>
+
+    <!-- 全局登录提示对话框 -->
+    <LoginPrompt 
+      v-model="showLoginPrompt"
+      :message="loginPromptMessage"
+      @cancel="closeLoginPrompt"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { House, Upload, Folder, Tools } from '@element-plus/icons-vue'
 import UserAvatar from '@/components/auth/UserAvatar.vue'
+import LoginPrompt from '@/components/auth/LoginPrompt.vue'
+import { useAuth } from '@/composables/useAuth'
+
+const { showLoginPrompt, loginPromptMessage, closeLoginPrompt } = useAuth()
 </script>
 
 <style scoped>
