@@ -731,11 +731,16 @@ const deleteFile = async (file: any) => {
       cancelButtonText: '取消',
       type: 'warning'
     })
-    
-    const index = files.value.findIndex(f => f.id === file.id)
-    if (index > -1) {
-      files.value.splice(index, 1)
+    // 调用后端接口删除
+    const res = await api.files.deleteFile(file.id)
+    if (res.success) {
+      const index = files.value.findIndex(f => f.id === file.id)
+      if (index > -1) {
+        files.value.splice(index, 1)
+      }
       ElMessage.success('文件删除成功')
+    } else {
+      ElMessage.error(res.message || '文件删除失败')
     }
   } catch {
     // 用户取消
