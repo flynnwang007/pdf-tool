@@ -74,6 +74,7 @@ print_info "构建后端项目..."
 cd $PROJECT_ROOT/backend
 
 # 检查gradle wrapper是否正常
+chmod +x gradlew
 if [ ! -f "gradle/wrapper/gradle-wrapper.jar" ] || ! ./gradlew --version >/dev/null 2>&1; then
     print_warning "Gradle Wrapper损坏，正在修复..."
     
