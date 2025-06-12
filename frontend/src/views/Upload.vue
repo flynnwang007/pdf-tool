@@ -137,6 +137,10 @@
           </div>
 138|
 ...
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
+import { useRouter } from 'vue-router'
+import { ElMessage, ElLoading, ElMessageBox } from 'element-plus'
+// ... existing code ...
 onMounted(() => {
   // ...原有逻辑
   loadUploadHistory()
@@ -146,10 +150,18 @@ onMounted(() => {
   if (isLoggedIn()) {
     const pending = sessionStorage.getItem('pendingUploadFiles')
     if (pending) {
-      ElMessage.info('为保护您的隐私，请重新选择要上传的文件')
-      nextTick(() => {
-        fileInput.value?.click()
-      })
+      ElMessageBox.alert(
+        '为保护您的隐私，请重新选择要上传的文件',
+        '温馨提示',
+        {
+          confirmButtonText: '确定',
+          callback: () => {
+            nextTick(() => {
+              fileInput.value?.click()
+            })
+          }
+        }
+      )
       sessionStorage.removeItem('pendingUploadFiles')
     }
   }
