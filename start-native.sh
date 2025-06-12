@@ -115,8 +115,26 @@ done
 # 构建前端
 print_info "构建前端项目..."
 cd $PROJECT_ROOT/frontend
+
+print_info "清理前端依赖和缓存..."
+rm -rf node_modules package-lock.json
+npm cache clean --force
+
+print_info "安装前端依赖..."
 npm install
+
+print_info "开始前端构建..."
 npm run build
+
+# 部署前端静态文件到 nginx 目录
+NGINX_STATIC_DIR="/var/www/pdf-tool"
+print_info "清理 nginx 静态目录旧产物..."
+rm -rf $NGINX_STATIC_DIR/*
+
+print_info "拷贝新前端产物到 nginx 静态目录..."
+cp -r dist/* $NGINX_STATIC_DIR/
+
+print_status "前端构建和部署完成"
 
 # 配置nginx提供前端静态文件
 print_info "配置前端服务..."
