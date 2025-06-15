@@ -14,7 +14,7 @@ readonly TIMESTAMP=$(date '+%Y%m%d_%H%M%S')
 
 # 环境变量配置
 export NODE_ENV=production
-export VITE_API_BASE_URL="http://14.103.200.105:8080/api"
+export VITE_API_BASE_URL="http://www.aibase123.cn:8080/api"
 export VITE_SUPABASE_URL="https://hfshqcftgclnpcfymdnn.supabase.co"
 export VITE_SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhmc2hxY2Z0Z2NsbnBjZnltZG5uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzUwNzM3ODcsImV4cCI6MjA1MDY0OTc4N30.5l6B6T2CxoYCCFebpD1P0p-r8KRRGWqh_cKKLIXJB8I"
 
@@ -243,14 +243,14 @@ post_deploy_verification() {
     fi
     
     # 检查前端服务
-    if curl -f -s "http://localhost:8081" > /dev/null; then
+    if curl -f -s "http://www.aibase123.cn:8081" > /dev/null; then
         print_status "前端服务验证成功"
     else
         print_warning "前端服务验证失败"
     fi
     
     # 检查后端API
-    if curl -f -s "http://localhost:8080/actuator/health" > /dev/null; then
+    if curl -f -s "http://www.aibase123.cn:8080/actuator/health" > /dev/null; then
         print_status "后端API验证成功"
     else
         print_warning "后端API验证失败，请检查后端服务状态"
@@ -267,13 +267,13 @@ show_deployment_info() {
     echo "=========================================="
     echo ""
     echo "🌐 前端访问地址:"
-    echo "   http://14.103.200.105:8081"
+    echo "   http://www.aibase123.cn:8081"
     echo ""
     echo "🔧 后端 API 地址:"
-    echo "   http://14.103.200.105:8080"
+    echo "   http://www.aibase123.cn:8080"
     echo ""
     echo "📊 健康检查:"
-    echo "   http://14.103.200.105:8080/actuator/health"
+    echo "   http://www.aibase123.cn:8080/actuator/health"
     echo ""
     echo "📁 服务器部署路径:"
     echo "   $SERVER_PATH"

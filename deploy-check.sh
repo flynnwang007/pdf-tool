@@ -29,7 +29,7 @@ fi
 
 # 检查后端服务
 echo "🔧 检查后端服务..."
-BACKEND_URL="http://14.103.200.105:8080"
+BACKEND_URL="https://www.aibase123.cn"
 if curl -f "$BACKEND_URL/actuator/health" > /dev/null 2>&1; then
     echo "✅ 后端服务正常运行"
     
@@ -52,7 +52,7 @@ fi
 
 # 检查前端服务
 echo "🌐 检查前端服务..."
-FRONTEND_URL="http://14.103.200.105:8081"
+FRONTEND_URL="https://www.aibase123.cn"
 if curl -f "$FRONTEND_URL" > /dev/null 2>&1; then
     echo "✅ 前端服务正常运行"
     

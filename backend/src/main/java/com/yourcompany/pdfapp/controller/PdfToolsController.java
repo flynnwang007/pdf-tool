@@ -20,7 +20,7 @@ import net.sourceforge.tess4j.TesseractException;
 @Slf4j
 @RestController
 @RequestMapping("/api/pdf-tools")
-@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:5173", "http://localhost:3006", "http://14.103.200.105:8081"})
+@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:5173", "http://localhost:3006", "http://www.aibase123.cn"})
 public class PdfToolsController {
     
     @Autowired

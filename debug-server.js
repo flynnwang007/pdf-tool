@@ -5,7 +5,7 @@ const fs = require('fs');
 
 // 使用你的真实MemFireDB JWT密钥
 const JWT_SECRET = '0d37e31b-3452-4949-8e19-04bc619c78c9';
-const SERVER_URL = 'http://14.103.200.105:8080';
+const SERVER_URL = 'http://www.aibase123.cn';
 
 // 创建测试JWT token
 function createTestToken() {

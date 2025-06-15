@@ -70,7 +70,7 @@ cd ..
 # 前端服务 (端口 8081)
 server {
     listen 8081;
-    server_name 14.103.200.105;
+    server_name www.aibase123.cn;
     
     root /var/www/pdf-tool;
     index index.html;
@@ -92,7 +92,7 @@ server {
 # 后端服务 (端口 8080) - 可选的反向代理
 server {
     listen 8080;
-    server_name 14.103.200.105;
+    server_name www.aibase123.cn;
     
     location / {
         proxy_pass http://localhost:8080;
@@ -133,8 +133,8 @@ sudo ufw --force enable
 
 ### ✅ 部署后验证
 
-- [ ] 后端服务启动成功 (`curl http://14.103.200.105:8080/actuator/health`)
-- [ ] 前端服务访问正常 (`curl http://14.103.200.105:8081`)
+- [ ] 后端服务启动成功 (`curl http://www.aibase123.cn/actuator/health`)
+- [ ] 前端服务访问正常 (`curl http://www.aibase123.cn`)
 - [ ] JWT验证功能正常
 - [ ] API认证工作正常
 - [ ] 无HMR变量残留
@@ -239,6 +239,6 @@ sudo tail -f /var/log/nginx/access.log
 ## 📞 技术支持
 
 - 项目地址: https://github.com/flynnwang007/pdf-tool
-- 前端访问: http://14.103.200.105:8081
-- 后端API: http://14.103.200.105:8080
-- 健康检查: http://14.103.200.105:8080/actuator/health 
+- 前端访问: http://www.aibase123.cn
+- 后端API: http://www.aibase123.cn
+- 健康检查: http://www.aibase123.cn/actuator/health 

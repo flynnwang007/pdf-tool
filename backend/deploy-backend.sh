@@ -99,8 +99,8 @@ sleep 10
 # 检查服务状态
 if curl -f http://localhost:8080/actuator/health > /dev/null 2>&1; then
     echo "✅ 后端服务启动成功！"
-    echo "🌐 服务地址: http://14.103.200.105:8080"
-    echo "📊 健康检查: http://14.103.200.105:8080/actuator/health"
+    echo "🌐 服务地址: http://www.aibase123.cn"
+    echo "📊 健康检查: http://www.aibase123.cn/actuator/health"
     
     # 测试JWT验证功能
     echo "🔐 测试JWT验证功能..."

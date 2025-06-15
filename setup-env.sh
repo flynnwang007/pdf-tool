@@ -12,7 +12,7 @@ export MEMFIRE_JWT_SECRET="0d37e31b-3452-4949-8e19-04bc619c78c9"
 
 # 应用配置
 export NODE_ENV="production"
-export VITE_API_BASE_URL="http://14.103.200.105:8080/api"
+export VITE_API_BASE_URL="http://www.aibase123.cn:8080/api"
 
 echo "✅ 环境变量设置完成"
 echo "🔑 JWT密钥长度: $(echo -n "$MEMFIRE_JWT_SECRET" | wc -c) 字符"

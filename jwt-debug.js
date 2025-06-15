@@ -20,7 +20,7 @@ function createTestToken(customPayload = {}) {
 async function testJWTVariations() {
     const servers = [
         { name: '本地', url: 'http://localhost:8080' },
-        { name: '云服务器', url: 'http://14.103.200.105:8080' }
+        { name: '云服务器', url: 'https://www.aibase123.cn' }
     ];
 
     const tokenVariations = [
@@ -97,7 +97,7 @@ async function testActualUpload() {
     const token = createTestToken();
     const servers = [
         { name: '本地', url: 'http://localhost:8080' },
-        { name: '云服务器', url: 'http://14.103.200.105:8080' }
+        { name: '云服务器', url: 'https://www.aibase123.cn' }
     ];
 
     for (const server of servers) {

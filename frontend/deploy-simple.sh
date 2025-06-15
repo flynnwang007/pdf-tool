@@ -18,7 +18,7 @@ fi
 
 # 设置构建环境变量
 export NODE_ENV=production
-export VITE_API_BASE_URL="http://14.103.200.105:8080/api"
+export VITE_API_BASE_URL="http://www.aibase123.cn:8080/api"
 
 # 验证必要的环境变量
 if [ -z "$VITE_SUPABASE_URL" ]; then
@@ -144,4 +144,4 @@ sudo chmod -R 755 /var/www/pdf-tool
 sudo systemctl reload nginx
 
 echo "✅ 部署完成！"
-echo "🌐 访问地址: http://14.103.200.105:8081" 
+echo "🌐 访问地址: http://www.aibase123.cn:8081" 

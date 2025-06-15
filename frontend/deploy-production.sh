@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # 生产环境部署脚本
-# 适用于服务器 14.103.200.105
+# 适用于服务器 www.aibase123.cn
 # 作者：Deploy Script Generator
 # 日期：$(date '+%Y-%m-%d %H:%M:%S')
 
@@ -11,7 +11,7 @@ set -euo pipefail
 readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly PROJECT_ROOT="$SCRIPT_DIR"  # 脚本就在前端项目根目录中
 readonly BUILD_DIR="$PROJECT_ROOT/dist"
-readonly SERVER_IP="14.103.200.105"
+readonly SERVER_IP="www.aibase123.cn"
 readonly SERVER_USER="root"
 readonly SERVER_PATH="/var/www/pdf-tool"
 readonly BACKUP_DIR="$HOME/pdf-tool-backups"
