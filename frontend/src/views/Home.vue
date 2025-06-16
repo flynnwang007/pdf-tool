@@ -157,7 +157,9 @@ const navigateToFeature = (path: string) => {
 .home-page {
   min-height: 100%;
   background: #f6f6f6;
-  padding: 0;
+  padding: env(safe-area-inset-top) 0 0 0;
+  padding: constant(safe-area-inset-top) 0 0 0;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Hero 区域 */
