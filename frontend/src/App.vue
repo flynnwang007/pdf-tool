@@ -428,4 +428,9 @@ function closeLoginPrompt() {
   background: #06ad56 !important;
   border-color: #06ad56 !important;
 }
+/* 顶部安全区适配，防止 WebView 顶到刘海/电池 */
+html, body, #app {
+  padding-top: env(safe-area-inset-top) !important;
+  padding-top: constant(safe-area-inset-top) !important;
+}
 </style> 
