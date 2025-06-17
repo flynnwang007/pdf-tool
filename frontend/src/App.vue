@@ -90,9 +90,7 @@ const loginPromptMessage = ref('请先登录后再进行操作')
 function closeLoginPrompt() {
   showLoginPrompt.value = false
 }
-</script>
 
-<script>
 // 判断是否在 uni-app WebView 环境
 function isInUniApp() {
   return /Html5Plus|uni-app/i.test(navigator.userAgent)
