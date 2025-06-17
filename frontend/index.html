@@ -409,6 +409,15 @@
     
     // 每400ms更新一次加载文本
     setInterval(updateLoadingText, 400);
+
+    // 判断是否在 uni-app WebView 环境
+    function isInUniApp() {
+      return /Html5Plus|uni-app/i.test(navigator.userAgent)
+    }
+    if (!isInUniApp()) {
+      document.documentElement.style.paddingTop = 'env(safe-area-inset-top, 24px)';
+      document.documentElement.style.paddingTop = 'constant(safe-area-inset-top, 24px)';
+    }
   </script>
 </body>
 </html> 

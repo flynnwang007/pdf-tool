@@ -92,6 +92,17 @@ function closeLoginPrompt() {
 }
 </script>
 
+<script>
+// 判断是否在 uni-app WebView 环境
+function isInUniApp() {
+  return /Html5Plus|uni-app/i.test(navigator.userAgent)
+}
+if (!isInUniApp()) {
+  document.documentElement.style.paddingTop = 'env(safe-area-inset-top, 24px)';
+  document.documentElement.style.paddingTop = 'constant(safe-area-inset-top, 24px)';
+}
+</script>
+
 <style scoped>
 .awesome-app {
   height: 100vh;
@@ -429,8 +440,5 @@ function closeLoginPrompt() {
   border-color: #06ad56 !important;
 }
 /* 顶部安全区适配，防止 WebView 顶到刘海/电池 */
-html, body, #app {
-  padding-top: env(safe-area-inset-top) !important;
-  padding-top: constant(safe-area-inset-top) !important;
-}
+/* 已由 JS 动态判断环境处理，无需全局 CSS 再加 padding-top */
 </style> 
