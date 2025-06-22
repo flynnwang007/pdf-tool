@@ -383,6 +383,7 @@ interface FileItem {
   isProcessing: boolean
   url: string
   thumbnail?: string | null
+  source: string
 }
 
 const router = useRouter()
@@ -421,6 +422,7 @@ const showFilterDrawer = ref(false)
 const showBatchActions = ref(false)
 const showPreview = ref(false)
 const previewFile = ref<FileItem | null>(null)
+const isLoading = ref(false)
 
 // 筛选条件
 const filters = ref({
@@ -431,6 +433,9 @@ const filters = ref({
 
 // 快速筛选选项
 const quickFilters = ref([
+  { key: 'all', label: '全部', active: true },
+  { key: 'upload', label: '我上传的', active: false },
+  { key: 'processed', label: '我处理的', active: false },
   { key: 'pdf', label: 'PDF', active: false },
   { key: 'image', label: '图片', active: false },
   { key: 'recent', label: '最近', active: false },
@@ -482,7 +487,12 @@ const filteredFiles = computed(() => {
   if (activeFilters.length > 0) {
     result = result.filter(file => {
       return activeFilters.some(filter => {
+        if (filter.key === 'all' && filter.active) return true;
         switch (filter.key) {
+          case 'upload':
+            return file.source === 'UPLOAD'
+          case 'processed':
+            return file.source === 'PROCESSED'
           case 'pdf':
             return file.type === 'PDF'
           case 'image':
@@ -592,7 +602,18 @@ const toggleViewMode = () => {
 }
 
 const toggleQuickFilter = (filter: any) => {
-  filter.active = !filter.active
+  if (filter.key === 'all') {
+    quickFilters.value.forEach(f => f.active = (f.key === 'all'));
+  } else {
+    filter.active = !filter.active;
+    const allFilter = quickFilters.value.find(f => f.key === 'all');
+    if (allFilter) allFilter.active = false;
+
+    const activeNormalFilters = quickFilters.value.filter(f => f.key !== 'all' && f.active);
+    if (activeNormalFilters.length === 0 && allFilter) {
+      allFilter.active = true;
+    }
+  }
 }
 
 const setFilter = (key: string, value: string) => {
@@ -871,34 +892,31 @@ const refreshFiles = async () => {
 
 // 加载文件列表
 const loadFiles = async () => {
-  // 如果用户未登录，显示空列表
   if (!isLoggedIn()) {
     files.value = []
     return
   }
-
+  
   try {
-    const response = await api.files.getAll()
-    if (response.success) {
-      // 转换后端数据格式为前端需要的格式
-      files.value = response.data.map((file: any) => ({
-        id: file.id,
-        name: file.originalName,
-        type: file.fileType,
-        size: file.fileSize,
-        updatedAt: file.createdAt,
-        isFavorite: false, // 默认值，后续可以扩展
-        isProcessing: false, // 默认值
-        url: `/api/files/${file.id}/download`,
-        thumbnail: file.fileType === 'IMAGE' ? `/api/files/${file.id}/download` : null
-      }))
-    } else {
-      console.error('获取文件列表失败:', response.message)
-      ElMessage.error('获取文件列表失败')
-    }
+    isLoading.value = true
+    // 这是获取文件列表的API调用
+    const response = await fileApi.getFiles() 
+    files.value = response.data.map((file: any) => ({
+      id: file.id,
+      name: file.originalName,
+      type: file.fileType,
+      size: file.fileSize,
+      updatedAt: file.createdAt,
+      source: file.source,
+      isFavorite: false,
+      isProcessing: false,
+      url: `/api/files/download/${file.id}`,
+      thumbnail: file.fileType === 'IMAGE' ? `/api/files/${file.id}/download` : null
+    }))
   } catch (error) {
-    console.error('加载文件列表出错:', error)
-    ElMessage.error('加载文件列表失败')
+    ElMessage.error('获取文件列表失败')
+  } finally {
+    isLoading.value = false
   }
 }
 

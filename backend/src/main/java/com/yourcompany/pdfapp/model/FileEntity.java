@@ -35,6 +35,9 @@ public class FileEntity {
     @Column(name = "checksum", length = 64)
     private String checksum;
     
+    @Column(name = "source", nullable = false, length = 20)
+    private String source;
+    
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
     
@@ -48,7 +51,7 @@ public class FileEntity {
     
     // 构造函数
     public FileEntity(String userId, String originalName, String storedName, String filePath, 
-                     Long fileSize, String fileType, String mimeType) {
+                     Long fileSize, String fileType, String mimeType, String source) {
         this.userId = userId;
         this.originalName = originalName;
         this.storedName = storedName;
@@ -56,6 +59,7 @@ public class FileEntity {
         this.fileSize = fileSize;
         this.fileType = fileType;
         this.mimeType = mimeType;
+        this.source = source;
     }
     
     // Getters and Setters
@@ -129,6 +133,14 @@ public class FileEntity {
     
     public void setChecksum(String checksum) {
         this.checksum = checksum;
+    }
+    
+    public String getSource() {
+        return source;
+    }
+    
+    public void setSource(String source) {
+        this.source = source;
     }
     
     public LocalDateTime getCreatedAt() {

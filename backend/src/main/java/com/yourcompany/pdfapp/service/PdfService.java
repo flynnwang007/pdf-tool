@@ -704,18 +704,17 @@ public class PdfService {
     }
     
     private FileEntity saveProcessedFile(Path filePath, String originalName, String description) throws IOException {
-        // 读取文件内容
         byte[] fileContent = Files.readAllBytes(filePath);
-        
-        // 使用FileService的新方法保存文件
         String mimeType = getMimeTypeFromExtension(getFileExtension(originalName));
-        return fileService.saveFileFromBytes(fileContent, originalName, mimeType, getCurrentUserId());
+        return fileService.saveFileFromBytes(fileContent, originalName, mimeType, getCurrentUserId(), "PROCESSED");
     }
     
     private FileEntity saveDocumentAsFile(PDDocument document, String fileName) throws IOException {
-        Path outputPath = createOutputFile(fileName);
-        document.save(outputPath.toFile());
-        return saveProcessedFile(outputPath, fileName, "PDF分割文件");
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        document.save(baos);
+        byte[] fileContent = baos.toByteArray();
+        String mimeType = "application/pdf";
+        return fileService.saveFileFromBytes(fileContent, fileName, mimeType, getCurrentUserId(), "PROCESSED");
     }
     
     private String getFileNameWithoutExtension(String fileName) {

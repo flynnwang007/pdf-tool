@@ -4,6 +4,8 @@ import com.yourcompany.pdfapp.config.AppConfig;
 import com.yourcompany.pdfapp.model.FileEntity;
 import com.yourcompany.pdfapp.repository.FileRepository;
 import org.apache.commons.io.FilenameUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -22,6 +24,8 @@ import java.util.UUID;
 @Service
 public class FileService {
     
+    private static final Logger logger = LoggerFactory.getLogger(FileService.class);
+
     @Autowired
     private FileRepository fileRepository;
     
@@ -58,12 +62,15 @@ public class FileService {
             filePath.toString(),
             file.getSize(),
             getFileType(extension),
-            file.getContentType()
+            file.getContentType(),
+            "UPLOAD"
         );
         fileEntity.setChecksum(checksum);
         
         // 保存到数据库
-        return fileRepository.save(fileEntity);
+        FileEntity savedEntity = fileRepository.save(fileEntity);
+        logger.info("文件已保存: id={}, name={}, source={}", savedEntity.getId(), savedEntity.getOriginalName(), savedEntity.getSource());
+        return savedEntity;
     }
     
     public Optional<FileEntity> getFile(Long fileId) {
@@ -174,7 +181,7 @@ public class FileService {
     /**
      * 直接保存字节数组为文件
      */
-    public FileEntity saveFileFromBytes(byte[] fileContent, String originalName, String mimeType, String userId) throws IOException {
+    public FileEntity saveFileFromBytes(byte[] fileContent, String originalName, String mimeType, String userId, String source) throws IOException {
         if (fileContent == null || fileContent.length == 0) {
             throw new IllegalArgumentException("文件内容不能为空");
         }
@@ -204,12 +211,15 @@ public class FileService {
             filePath.toString(),
             (long) fileContent.length,
             getFileType(extension),
-            mimeType != null ? mimeType : "application/octet-stream"
+            mimeType != null ? mimeType : "application/octet-stream",
+            source
         );
         fileEntity.setChecksum(checksum);
         
         // 保存到数据库
-        return fileRepository.save(fileEntity);
+        FileEntity savedEntity = fileRepository.save(fileEntity);
+        logger.info("文件已保存 (from bytes): id={}, name={}, source={}", savedEntity.getId(), savedEntity.getOriginalName(), savedEntity.getSource());
+        return savedEntity;
     }
     
     /**
