@@ -1312,7 +1312,25 @@ public class PdfService {
     private PDFont loadChineseFontFromFile(PDDocument document) {
         System.out.println("检测到中文字符，尝试加载中文字体...");
         
-        String[] fontPaths = {
+        // 1. 优先从项目内置资源加载字体
+        String bundledFontPath = "/fonts/SourceHanSansSC-Regular.otf";
+        try {
+            InputStream fontStream = PdfService.class.getResourceAsStream(bundledFontPath);
+            if (fontStream != null) {
+                System.out.println("尝试从内置资源加载字体: " + bundledFontPath);
+                // PDFBox的load方法会自行关闭流，所以这里不能用try-with-resources
+                return PDType0Font.load(document, fontStream, false);
+            } else {
+                System.out.println("警告: 未找到内置字体资源 " + bundledFontPath);
+            }
+        } catch (IOException e) {
+            System.err.println("加载内置字体时发生IO错误: " + e.getMessage());
+        }
+
+        System.out.println("内置字体加载失败，回退到系统字体...");
+
+        // 2. 如果内置字体加载失败，则回退到系统字体
+        String[] systemFontPaths = {
             "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
             "C:/Windows/Fonts/simsun.ttc",
             "/System/Library/Fonts/STHeiti Light.ttc",
@@ -1320,19 +1338,16 @@ public class PdfService {
             "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
         };
 
-        for (String path : fontPaths) {
+        for (String path : systemFontPaths) {
             try {
                 File fontFile = new File(path);
                 if (fontFile.exists()) {
-                    System.out.println("尝试加载字体文件: " + path);
+                    System.out.println("尝试加载系统字体文件: " + path);
                     if (path.toLowerCase().endsWith(".ttc")) {
                         try (TrueTypeCollection ttc = new TrueTypeCollection(fontFile)) {
-                            // 使用TTC处理器来获取第一个字体
                             final TrueTypeFont[] ttf = new TrueTypeFont[1];
                             ttc.processAllFonts(font -> {
-                                if (ttf[0] == null) {
-                                    ttf[0] = font;
-                                }
+                                if (ttf[0] == null) ttf[0] = font;
                             });
                             if (ttf[0] != null) {
                                 System.out.println("成功从TTC加载字体: " + ttf[0].getName());
@@ -1340,18 +1355,17 @@ public class PdfService {
                             }
                         }
                     } else {
-                        // 对于 TTF/OTF 文件，直接从 InputStream 加载
                         try (InputStream fontStream = new FileInputStream(fontFile)) {
                             return PDType0Font.load(document, fontStream, false);
                         }
                     }
                 }
             } catch (Exception e) {
-                System.err.println("加载字体 " + path + " 失败: " + e.getMessage());
+                System.err.println("加载系统字体 " + path + " 失败: " + e.getMessage());
             }
         }
 
-        System.out.println("所有预设路径均未找到可用的中文字体，返回null");
+        System.out.println("所有内置及系统路径均未找到可用的中文字体，返回null");
         return null;
     }
 
