@@ -145,7 +145,7 @@ public class PdfService {
             mergedDocument.close();
             
             // 保存为新的文件实体
-            return saveProcessedFile(outputPath, outputName, "PDF合并文件");
+            return saveProcessedFile(outputPath, outputName, "PDF合并");
             
         } finally {
             // 关闭所有文档
@@ -189,7 +189,7 @@ public class PdfService {
                     for (int i = 0; i < splitDocuments.size(); i++) {
                         String fileName = getFileNameWithoutExtension(originalFile.get().getOriginalName()) 
                                         + "_part" + (i + 1) + ".pdf";
-                        FileEntity splitFile = saveDocumentAsFile(splitDocuments.get(i), fileName);
+                        FileEntity splitFile = saveDocumentAsFile(splitDocuments.get(i), fileName, "PDF分割");
                         resultFiles.add(splitFile);
                     }
                     
@@ -222,7 +222,7 @@ public class PdfService {
                         
                         String fileName = getFileNameWithoutExtension(originalFile.get().getOriginalName()) 
                                         + "_pages" + startPage + "-" + endPage + ".pdf";
-                        FileEntity rangeFile = saveDocumentAsFile(rangeDoc, fileName);
+                        FileEntity rangeFile = saveDocumentAsFile(rangeDoc, fileName, "PDF分割");
                         resultFiles.add(rangeFile);
                         
                         rangeDoc.close();
@@ -261,7 +261,7 @@ public class PdfService {
             
             document.save(outputPath.toFile());
             
-            return saveProcessedFile(outputPath, outputName, "PDF压缩文件");
+            return saveProcessedFile(outputPath, outputName, "PDF压缩");
         }
     }
     
@@ -361,7 +361,7 @@ public class PdfService {
             
             document.save(outputPath.toFile());
             
-            return saveProcessedFile(outputPath, outputName, "图片转PDF文件");
+            return saveProcessedFile(outputPath, outputName, "图片转PDF");
         }
     }
     
@@ -411,7 +411,7 @@ public class PdfService {
             
             wordDoc.close();
             
-            FileEntity savedFile = saveProcessedFile(outputPath, outputName, "PDF转Word文档");
+            FileEntity savedFile = saveProcessedFile(outputPath, outputName, "PDF转Word");
             return savedFile.getId();
         }
     }
@@ -478,7 +478,7 @@ public class PdfService {
             
             workbook.close();
             
-            FileEntity savedFile = saveProcessedFile(outputPath, outputName, "PDF转Excel表格");
+            FileEntity savedFile = saveProcessedFile(outputPath, outputName, "PDF转Excel");
             return savedFile.getId();
         }
     }
@@ -529,7 +529,7 @@ public class PdfService {
                 }
             }
             
-            FileEntity savedFile = saveProcessedFile(outputPath, outputName, "PDF转CSV文件");
+            FileEntity savedFile = saveProcessedFile(outputPath, outputName, "PDF转CSV");
             return savedFile.getId();
         }
     }
@@ -708,15 +708,15 @@ public class PdfService {
     private FileEntity saveProcessedFile(Path filePath, String originalName, String description) throws IOException {
         byte[] fileContent = Files.readAllBytes(filePath);
         String mimeType = getMimeTypeFromExtension(getFileExtension(originalName));
-        return fileService.saveFileFromBytes(fileContent, originalName, mimeType, getCurrentUserId(), "PROCESSED");
+        return fileService.saveFileFromBytes(fileContent, originalName, mimeType, getCurrentUserId(), description);
     }
     
-    private FileEntity saveDocumentAsFile(PDDocument document, String fileName) throws IOException {
+    private FileEntity saveDocumentAsFile(PDDocument document, String fileName, String description) throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         document.save(baos);
         byte[] fileContent = baos.toByteArray();
         String mimeType = "application/pdf";
-        return fileService.saveFileFromBytes(fileContent, fileName, mimeType, getCurrentUserId(), "PROCESSED");
+        return fileService.saveFileFromBytes(fileContent, fileName, mimeType, getCurrentUserId(), description);
     }
     
     private String getFileNameWithoutExtension(String fileName) {
@@ -985,7 +985,7 @@ public class PdfService {
             document.save(outputPath.toFile());
             System.out.println("文件保存成功");
             
-            FileEntity result = saveProcessedFile(outputPath, outputName, "添加水印的PDF文件");
+            FileEntity result = saveProcessedFile(outputPath, outputName, "添加水印");
             System.out.println("处理完成，新文件ID: " + result.getId());
             
             return result;
@@ -1532,7 +1532,7 @@ public class PdfService {
             Path outputPath = createOutputFile(outputName);
             document.save(outputPath.toFile());
             
-            return saveProcessedFile(outputPath, outputName, "旋转页面的PDF文件");
+            return saveProcessedFile(outputPath, outputName, "页面旋转");
         }
     }
     
@@ -1570,7 +1570,7 @@ public class PdfService {
             Path outputPath = createOutputFile(outputName);
             document.save(outputPath.toFile());
             
-            return saveProcessedFile(outputPath, outputName, "删除页面的PDF文件");
+            return saveProcessedFile(outputPath, outputName, "页面删除");
         }
     }
     
@@ -1611,7 +1611,7 @@ public class PdfService {
             Path outputPath = createOutputFile(outputName);
             extractedDocument.save(outputPath.toFile());
             
-            return saveProcessedFile(outputPath, outputName, "提取页面的PDF文件");
+            return saveProcessedFile(outputPath, outputName, "页面提取");
         }
     }
     
@@ -1655,7 +1655,7 @@ public class PdfService {
             Path outputPath = createOutputFile(outputName);
             reorderedDocument.save(outputPath.toFile());
             
-            return saveProcessedFile(outputPath, outputName, "重排序页面的PDF文件");
+            return saveProcessedFile(outputPath, outputName, "页面重排");
         }
     }
     
@@ -1907,7 +1907,7 @@ public class PdfService {
             Path outputPath = createOutputFile(outputName);
             document.save(outputPath.toFile());
             
-            return saveProcessedFile(outputPath, outputName, "PDF加密文件");
+            return saveProcessedFile(outputPath, outputName, "PDF加密");
         }
     }
     
@@ -1937,7 +1937,7 @@ public class PdfService {
             Path outputPath = createOutputFile(outputName);
             document.save(outputPath.toFile());
             
-            return saveProcessedFile(outputPath, outputName, "PDF解密文件");
+            return saveProcessedFile(outputPath, outputName, "PDF解密");
         } catch (InvalidPasswordException e) {
             throw new IllegalArgumentException("密码错误，无法解密PDF文件");
         }
@@ -2049,7 +2049,7 @@ public class PdfService {
             Path outputPath = createOutputFile(outputName);
             document.save(outputPath.toFile());
             
-            return saveProcessedFile(outputPath, outputName, "内容编辑的PDF文件 (共涂黑" + totalRedactedCount + "处敏感内容)");
+            return saveProcessedFile(outputPath, outputName, "内容编辑");
         }
     }
     
@@ -2136,7 +2136,7 @@ public class PdfService {
                 description += " (签名页: 共" + pagesToSign.size() + "页)";
             }
             
-            return saveProcessedFile(outputPath, outputName, description);
+            return saveProcessedFile(outputPath, outputName, "数字签名");
         }
     }
 } 
