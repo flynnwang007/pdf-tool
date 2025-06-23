@@ -1313,7 +1313,7 @@ public class PdfService {
         System.out.println("检测到中文字符，尝试加载中文字体...");
         
         // 1. 优先从项目内置资源加载字体
-        String bundledFontPath = "/fonts/SourceHanSansSC-Regular.otf";
+        String bundledFontPath = "/fonts/AlibabaPuHuiTi-2-55-Regular.ttf";
         try {
             InputStream fontStream = PdfService.class.getResourceAsStream(bundledFontPath);
             if (fontStream != null) {
