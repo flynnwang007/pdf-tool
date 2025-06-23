@@ -1318,8 +1318,10 @@ public class PdfService {
             InputStream fontStream = PdfService.class.getResourceAsStream(bundledFontPath);
             if (fontStream != null) {
                 System.out.println("尝试从内置资源加载字体: " + bundledFontPath);
-                // PDFBox的load方法会自行关闭流，所以这里不能用try-with-resources
-                return PDType0Font.load(document, fontStream, false);
+                // 启用字体子集嵌入(embedSubset=true)，以减小文件大小
+                try (InputStream closableFontStream = fontStream) {
+                    return PDType0Font.load(document, closableFontStream, true);
+                }
             } else {
                 System.out.println("警告: 未找到内置字体资源 " + bundledFontPath);
             }
@@ -1356,7 +1358,8 @@ public class PdfService {
                         }
                     } else {
                         try (InputStream fontStream = new FileInputStream(fontFile)) {
-                            return PDType0Font.load(document, fontStream, false);
+                            // 对后备字体同样启用子集嵌入
+                            return PDType0Font.load(document, fontStream, true);
                         }
                     }
                 }
