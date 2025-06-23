@@ -69,6 +69,8 @@ import java.io.InputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import org.apache.fontbox.ttf.TrueTypeCollection;
+import org.apache.fontbox.ttf.TrueTypeFont;
 
 import org.apache.pdfbox.pdmodel.interactive.digitalsignature.PDSignature;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
@@ -1297,100 +1299,62 @@ public class PdfService {
      * 创建支持文本的字体
      */
     private PDFont createSupportedFont(PDDocument document, String text) throws IOException {
-        try {
-            // 检查文本是否包含中文字符
-            boolean containsChinese = containsChineseCharacters(text);
-            
-            if (!containsChinese) {
-                // 如果不包含中文，使用默认字体
-                return new PDType1Font(Standard14Fonts.FontName.HELVETICA);
+        if (containsChineseCharacters(text)) {
+            PDFont font = loadChineseFontFromFile(document);
+            if (font != null) {
+                return font;
             }
-            
-            System.out.println("检测到中文字符，尝试加载中文字体...");
-            
-            // 尝试使用系统字体路径加载中文字体
-            PDFont chineseFont = loadChineseFontFromFile(document);
-            if (chineseFont != null) {
-                System.out.println("成功加载中文字体文件");
-                return chineseFont;
-            }
-            
-            System.out.println("警告：无法加载中文字体，将使用默认字体并过滤字符");
-            return new PDType1Font(Standard14Fonts.FontName.HELVETICA);
-            
-        } catch (Exception e) {
-            System.out.println("字体创建失败: " + e.getMessage());
-            e.printStackTrace();
-            return new PDType1Font(Standard14Fonts.FontName.HELVETICA);
         }
+        // 对于非中文或字体加载失败的情况，使用内置字体
+        return new PDType1Font(Standard14Fonts.FontName.HELVETICA);
     }
-    
-        /**
-     * 尝试从系统字体文件加载中文字体
-     */
+
     private PDFont loadChineseFontFromFile(PDDocument document) {
-        try {
-            String osName = System.getProperty("os.name").toLowerCase();
-            String[] fontPaths = {};
-            
-            if (osName.contains("mac")) {
-                // macOS字体路径
-                fontPaths = new String[]{
-                    "/System/Library/Fonts/PingFang.ttc",
-                    "/System/Library/Fonts/Hiragino Sans GB.ttc",
-                    "/System/Library/Fonts/STHeiti Light.ttc",
-                    "/System/Library/Fonts/Arial Unicode.ttf",
-                    "/Library/Fonts/Arial Unicode.ttf"
-                };
-            } else if (osName.contains("win")) {
-                // Windows字体路径
-                fontPaths = new String[]{
-                    "C:/Windows/Fonts/msyh.ttc",      // Microsoft YaHei
-                    "C:/Windows/Fonts/simsun.ttc",    // SimSun
-                    "C:/Windows/Fonts/simhei.ttf",    // SimHei
-                    "C:/Windows/Fonts/kaiti.ttf",     // KaiTi
-                    "C:/Windows/Fonts/simfang.ttf"    // FangSong
-                };
-            } else {
-                // Linux字体路径 - 使用配置文件中的路径
-                List<String> configuredPaths = pdfProperties.getFonts().getChinesePaths();
-                if (configuredPaths != null && !configuredPaths.isEmpty()) {
-                    fontPaths = configuredPaths.toArray(new String[0]);
-                } else {
-                    // 如果配置为空，则使用默认路径
-                    fontPaths = new String[]{
-                        "/usr/share/fonts/truetype/wqy/wqy-microhei.ttc",
-                        "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
-                        "/usr/share/fonts/truetype/arphic/uming.ttc",
-                        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
-                    };
-                }
-            }
-            
-            // 尝试加载字体文件
-            for (String fontPath : fontPaths) {
-                try {
-                    java.io.File fontFile = new java.io.File(fontPath);
-                                         if (fontFile.exists() && fontFile.canRead()) {
-                         System.out.println("尝试加载字体文件: " + fontPath);
-                         // 使用PDType0Font加载字体以支持Unicode字符（包括中文）
-                         return PDType0Font.load(document, fontFile);
-                     }
-                } catch (Exception e) {
-                    System.out.println("加载字体文件失败: " + fontPath + " - " + e.getMessage());
-                }
-            }
-            
-        } catch (Exception e) {
-            System.out.println("加载中文字体文件时出错: " + e.getMessage());
-        }
+        System.out.println("检测到中文字符，尝试加载中文字体...");
         
+        String[] fontPaths = {
+            "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
+            "C:/Windows/Fonts/simsun.ttc",
+            "/System/Library/Fonts/STHeiti Light.ttc",
+            "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc",
+            "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
+        };
+
+        for (String path : fontPaths) {
+            try {
+                File fontFile = new File(path);
+                if (fontFile.exists()) {
+                    System.out.println("尝试加载字体文件: " + path);
+                    if (path.toLowerCase().endsWith(".ttc")) {
+                        try (TrueTypeCollection ttc = new TrueTypeCollection(fontFile)) {
+                            // 使用TTC处理器来获取第一个字体
+                            final TrueTypeFont[] ttf = new TrueTypeFont[1];
+                            ttc.processAllFonts(font -> {
+                                if (ttf[0] == null) {
+                                    ttf[0] = font;
+                                }
+                            });
+                            if (ttf[0] != null) {
+                                System.out.println("成功从TTC加载字体: " + ttf[0].getName());
+                                return PDType0Font.load(document, ttf[0], true);
+                            }
+                        }
+                    } else {
+                        // 对于 TTF/OTF 文件，直接从 InputStream 加载
+                        try (InputStream fontStream = new FileInputStream(fontFile)) {
+                            return PDType0Font.load(document, fontStream, false);
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                System.err.println("加载字体 " + path + " 失败: " + e.getMessage());
+            }
+        }
+
+        System.out.println("所有预设路径均未找到可用的中文字体，返回null");
         return null;
     }
-    
-    /**
-     * 检查文本是否包含中文字符
-     */
+
     private boolean containsChineseCharacters(String text) {
         if (text == null || text.isEmpty()) {
             return false;
@@ -2122,7 +2086,7 @@ public class PdfService {
                         contentStream.setFont(createSupportedFont(document, "数字签名"), 9);
                         contentStream.setNonStrokingColor(Color.BLUE);
                         contentStream.newLineAtOffset(x + 10, y + height - 15);
-                        contentStream.showText("✓ 数字签名验证");
+                        contentStream.showText("[认证] 数字签名");
                         contentStream.newLineAtOffset(0, -12);
                         contentStream.showText("签名者: " + signerName);
                         contentStream.newLineAtOffset(0, -12);
