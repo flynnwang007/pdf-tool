@@ -3,6 +3,7 @@ package com.yourcompany.pdfapp.controller;
 import com.yourcompany.pdfapp.model.FileEntity;
 import com.yourcompany.pdfapp.security.SupabaseUserPrincipal;
 import com.yourcompany.pdfapp.service.FileService;
+import com.yourcompany.pdfapp.service.JwtService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
@@ -29,6 +30,9 @@ public class FileController {
     
     @Autowired
     private FileService fileService;
+    
+    @Autowired
+    private JwtService jwtService;
     
     // 获取当前认证用户
     private String getCurrentUserId() {
@@ -214,6 +218,72 @@ public class FileController {
             response.put("success", false);
             response.put("message", "获取文件列表失败");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    /**
+     * 生成带token的下载链接
+     * POST /api/files/{fileId}/generate-download-url
+     */
+    @PostMapping("/{fileId}/generate-download-url")
+    public ResponseEntity<Map<String, Object>> generateDownloadUrl(@PathVariable Long fileId) {
+        Map<String, Object> response = new HashMap<>();
+        String userId = getCurrentUserId();
+        if (userId == null) {
+            response.put("success", false);
+            response.put("message", "用户未认证");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+        // 检查文件归属
+        Optional<FileEntity> fileOpt = fileService.getFileByUserAndId(userId, fileId);
+        if (fileOpt.isEmpty()) {
+            response.put("success", false);
+            response.put("message", "文件不存在或无权访问");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
+        // 生成token（10分钟有效）
+        String token = jwtService.generateDownloadToken(fileId.toString(), 600);
+        String url = "/api/files/download/" + fileId + "?token=" + token;
+        response.put("success", true);
+        response.put("url", url);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 支持token校验的下载接口
+     * GET /api/files/download/{fileId}?token=xxx
+     * 无需登录态，仅校验token
+     */
+    @GetMapping("/download/{fileId}")
+    public ResponseEntity<Resource> downloadFileWithToken(
+            @PathVariable Long fileId,
+            @RequestParam String token) {
+        // 校验token
+        boolean valid = jwtService.validateDownloadToken(token, fileId.toString());
+        if (!valid) {
+            System.out.println("下载token校验失败: fileId=" + fileId + ", token=" + token);
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        try {
+            Optional<FileEntity> fileOpt = fileService.getFileById(fileId);
+            if (fileOpt.isEmpty()) {
+                return ResponseEntity.notFound().build();
+            }
+            FileEntity file = fileOpt.get();
+            byte[] fileContent = fileService.getFileContent(fileId);
+            ByteArrayResource resource = new ByteArrayResource(fileContent);
+            String encodedFileName;
+            try {
+                encodedFileName = java.net.URLEncoder.encode(file.getOriginalName(), "UTF-8").replace("+", "%20");
+            } catch (UnsupportedEncodingException e) {
+                encodedFileName = file.getOriginalName().replaceAll("[^\\w.-]", "_");
+            }
+            return ResponseEntity.ok()
+                    .contentType(MediaType.parseMediaType(file.getMimeType()))
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename*=UTF-8''" + encodedFileName)
+                    .body(resource);
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 } 

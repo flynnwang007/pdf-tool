@@ -237,4 +237,11 @@ public class FileService {
         
         return "tmp";
     }
+    
+    /**
+     * 根据文件ID获取文件实体（不校验用户）
+     */
+    public Optional<FileEntity> getFileById(Long fileId) {
+        return fileRepository.findById(fileId);
+    }
 } 

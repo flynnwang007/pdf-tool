@@ -34,11 +34,11 @@ public class SecurityConfig {
                 // 公开访问的端点
                 .requestMatchers("/", "/h2-console/**", "/actuator/**").permitAll()
                 .requestMatchers("/public/**").permitAll()
-                
-                // API端点需要认证
+                // 放行下载接口
+                .requestMatchers("/api/files/download/**").permitAll()
+                // 其他API端点需要认证
                 .requestMatchers("/api/files/**").authenticated()
                 .requestMatchers("/api/pdf-tools/**").authenticated()
-                
                 // 其他请求默认允许（为了向后兼容）
                 .anyRequest().permitAll()
             )

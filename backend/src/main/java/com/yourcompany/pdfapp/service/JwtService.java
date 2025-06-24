@@ -111,4 +111,41 @@ public class JwtService {
         }
         return extractAllClaims(token);
     }
+    
+    /**
+     * 生成仅用于文件下载的 JWT token
+     * @param fileId 文件ID
+     * @param expiresInSeconds 有效期（秒）
+     * @return token字符串
+     */
+    public String generateDownloadToken(String fileId, long expiresInSeconds) {
+        Date now = new Date();
+        Date expiry = new Date(now.getTime() + expiresInSeconds * 1000);
+        SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes());
+        return Jwts.builder()
+                .setSubject(fileId)
+                .setExpiration(expiry)
+                .claim("type", "download")
+                .signWith(key)
+                .compact();
+    }
+
+    /**
+     * 校验下载token是否有效
+     * @param token token字符串
+     * @param fileId 文件ID
+     * @return 是否有效
+     */
+    public boolean validateDownloadToken(String token, String fileId) {
+        try {
+            Claims claims = extractAllClaims(token);
+            boolean expired = claims.getExpiration().before(new Date());
+            boolean match = fileId.equals(claims.getSubject());
+            boolean isDownload = "download".equals(claims.get("type"));
+            return !expired && match && isDownload;
+        } catch (Exception e) {
+            logger.error("下载token校验失败: {}", e.getMessage());
+            return false;
+        }
+    }
 } 
