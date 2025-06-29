@@ -124,6 +124,10 @@ logging:
   file:
     name: logs/pdf-app.log
 
+jodconverter:
+  local:
+    office-home: /usr/lib/libreoffice
+
 ---
 # 开发环境配置
 spring:
