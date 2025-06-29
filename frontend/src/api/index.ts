@@ -152,7 +152,16 @@ export const fileApi = {
       headers: { 'Content-Type': 'application/json' }
     })
     return response.data
-  }
+  },
+
+  uploadFiles: async (files: File[]) => {
+    const ids: number[] = []
+    for (const file of files) {
+      const res = await fileApi.uploadFile(file)
+      if (res.success) ids.push(res.data.fileId)
+    }
+    return ids
+  },
 }
 
 // PDF工具API
@@ -227,11 +236,26 @@ export const pdfApi = {
 
   // 图片转PDF
   convertImagesToPdf: async (files: File[], outputFileName = 'images_to_pdf.pdf') => {
-    const formData = new FormData()
-    files.forEach(file => formData.append('files', file))
-    formData.append('outputFileName', outputFileName)
-    
-    const response = await api.post('/pdf-tools/from-images', formData)
+    // 先上传图片，拿到 fileId
+    const imageFileIds = await fileApi.uploadFiles(files)
+    // 再合成 PDF
+    const response = await api.post('/pdf-tools/from-images', {
+      imageFileIds,
+      outputFileName
+    }, {
+      headers: { 'Content-Type': 'application/json' }
+    })
+    return response.data
+  },
+
+  // 基于文件ID的图片转PDF
+  imagesToPdfByIds: async (imageFileIds: number[], outputFileName = 'images_to_pdf.pdf') => {
+    const response = await api.post('/pdf-tools/from-images', {
+      imageFileIds,
+      outputFileName
+    }, {
+      headers: { 'Content-Type': 'application/json' }
+    })
     return response.data
   },
 

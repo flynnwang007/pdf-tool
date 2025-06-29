@@ -1025,6 +1025,14 @@ const conversionTools = [
     description: '将PDF页面转换为图片文件',
     fullDescription: '将PDF页面转换为高质量的图片文件，支持JPG、PNG等格式。',
     options: ['pageRange', 'quality', 'format']
+  },
+  {
+    id: 'image-to-pdf',
+    name: '图片转PDF',
+    emoji: '📄',
+    description: '将多张图片合并为一个PDF文件',
+    fullDescription: '将多张图片（JPG, PNG等）合并为一个PDF文件。',
+    options: []
   }
 ]
 
@@ -1258,6 +1266,58 @@ const startProcessing = async () => {
         processedCount.value = totalFiles.value
         processingProgress.value = 100
       }
+    } else if (selectedTool.value.id === 'image-to-pdf') {
+      const totalFilesForConversion = selectedFiles.value.length + selectedExistingFileIds.value.length;
+      if (totalFilesForConversion === 0) {
+        throw new Error('请选择要转换为PDF的图片');
+      }
+
+      let result;
+      // If there are only new files, we can use the direct conversion endpoint
+      if (selectedExistingFileIds.value.length === 0 && selectedFiles.value.length > 0) {
+        currentProcessingFile.value = `正在转换 ${selectedFiles.value.length} 张图片...`;
+        processingProgress.value = 50;
+        result = await pdfApi.convertImagesToPdf(selectedFiles.value);
+      } else {
+        // If there are existing files or a mix, we need to upload new ones and use IDs
+        const allFileIds = [...selectedExistingFileIds.value.map(id => parseInt(id))];
+        
+        // 上传新文件并获取fileId
+        for (let i = 0; i < selectedFiles.value.length; i++) {
+          const file = selectedFiles.value[i];
+          currentProcessingFile.value = `正在上传 ${file.name}...`;
+          try {
+            const uploadResult = await fileApi.uploadFile(file);
+            if (uploadResult.success) {
+              allFileIds.push(uploadResult.data.fileId);
+            } else {
+              throw new Error(`上传文件 ${file.name} 失败: ${uploadResult.message || '未知错误'}`);
+            }
+          } catch (error: any) {
+            throw new Error(`上传文件 ${file.name} 失败: ${error.message}`);
+          }
+        }
+
+        currentProcessingFile.value = '正在将图片合并为PDF...';
+        processingProgress.value = 50;
+        result = await pdfApi.imagesToPdfByIds(allFileIds);
+      }
+
+      if (result && result.success) {
+        const processedFile = {
+          name: result.data.fileName || `images_to_pdf_${Date.now()}.pdf`,
+          size: result.data.fileSize || 0,
+          fileId: result.data.fileId,
+          downloadUrl: `/api/files/${result.data.fileId}/download`
+        };
+        processedFiles.value.push(processedFile);
+        processedCount.value = totalFiles.value;
+        processingProgress.value = 100;
+      } else if (result && !result.success) {
+        throw new Error(result.message || '图片转PDF失败');
+      } else if (!result) {
+        throw new Error('图片转PDF失败');
+      }
     } else {
       // 处理其他功能
       // 处理上传的新文件
@@ -1461,7 +1521,8 @@ const processFile = async (file: File | null, fileId: string | null) => {
           throw new Error(`处理文件失败: ${error.message}`)
         }
       }
-      break
+      break;
+    
       
     // === 页面操作功能 ===
     case 'rotate':
@@ -1956,6 +2017,8 @@ const getOutputFileName = (originalName: string, toolId: string) => {
       return `${nameWithoutExt}_redacted.pdf`
     case 'sign':
       return `${nameWithoutExt}_signed.pdf`
+    case 'image-to-pdf':
+      return `images_to_pdf_${Date.now()}.pdf`
     default:
       return `${nameWithoutExt}_processed.pdf`
   }
@@ -2116,6 +2179,9 @@ const getUploadSubtitle = () => {
 const getAcceptType = () => {
   if (selectedTool.value?.id === 'ocr') {
     return '.pdf,.jpg,.jpeg,.png,.tiff,.bmp'
+  }
+  if (selectedTool.value?.id === 'image-to-pdf') {
+    return '.jpg,.jpeg,.png,.tiff,.bmp,.webp,.gif'
   }
   return '.pdf'
 }
@@ -3799,26 +3865,6 @@ onUnmounted(() => {
 }
 
 .watermark-common .option-control :deep(.el-option.is-disabled:focus:not(:hover):not(.is-selected):active:not(.is-disabled):not(.is-focus):not(.is-disabled):not(.is-focus)) {
-  background-color: #e9ecef;
-}
-
-.watermark-common .option-control :deep(.el-option.is-disabled:focus:not(:hover):not(.is-selected):active:not(.is-disabled):not(.is-focus):not(.is-disabled):not(.is-focus):not(.is-disabled)) {
-  background-color: #e9ecef;
-}
-
-.watermark-common .option-control :deep(.el-option.is-disabled:focus:not(:hover):not(.is-selected):active:not(.is-disabled):not(.is-focus):not(.is-disabled):not(.is-focus):not(.is-disabled):not(.is-focus)) {
-  background-color: #e9ecef;
-}
-
-.watermark-common .option-control :deep(.el-option.is-disabled:focus:not(:hover):not(.is-selected):active:not(.is-disabled):not(.is-focus):not(.is-disabled):not(.is-focus):not(.is-disabled):not(.is-focus):not(.is-focus)) {
-  background-color: #e9ecef;
-}
-
-.watermark-common .option-control :deep(.el-option.is-disabled:focus:not(:hover):not(.is-selected):active:not(.is-disabled):not(.is-focus):not(.is-disabled):not(.is-focus):not(.is-disabled):not(.is-focus):not(.is-focus):not(.is-focus):not(.is-focus)) {
-  background-color: #e9ecef;
-}
-
-.watermark-common .option-control :deep(.el-option.is-disabled:focus:not(:hover):not(.is-selected):active:not(.is-disabled):not(.is-focus):not(.is-disabled):not(.is-focus):not(.is-disabled):not(.is-focus):not(.is-focus):not(.is-focus):not(.is-focus):not(.is-focus):not(.is-focus):not(.is-focus):not(.is-focus):not(.is-focus):not(.is-focus):not(.is-focus)) {
   background-color: #e9ecef;
 }
 

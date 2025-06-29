@@ -348,11 +348,14 @@ public class PdfService {
                 BufferedImage image = ImageIO.read(new ByteArrayInputStream(imageContent));
                 
                 if (image != null) {
-                    // 这里需要实现图片转PDF页面的逻辑
-                    // 由于PDFBox的API较复杂，这是简化版本
-                    // 实际实现需要处理图片缩放、页面大小等
-                    PDPage page = new PDPage();
+                    PDPage page = new PDPage(new PDRectangle(image.getWidth(), image.getHeight()));
                     document.addPage(page);
+                    
+                    PDImageXObject pdImage = LosslessFactory.createFromImage(document, image);
+                    
+                    try (PDPageContentStream contentStream = new PDPageContentStream(document, page)) {
+                        contentStream.drawImage(pdImage, 0, 0, image.getWidth(), image.getHeight());
+                    }
                 }
             }
             

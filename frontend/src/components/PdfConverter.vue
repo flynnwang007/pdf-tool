@@ -48,17 +48,16 @@
         @drop="handleDrop"
         @dragover.prevent="isDragOver = true"
         @dragleave="isDragOver = false"
-        @click="triggerFileInput"
       >
-        <input 
-          ref="fileInput"
-          type="file" 
-          :accept="getAcceptedFileTypes()"
-          @change="handleFileSelect"
-          style="display: none"
-        >
+        <!-- Direct Inputs for Debugging -->
+        <p><strong>调试模式：请直接点击下面的按钮</strong></p>
+        <div style="padding: 20px; display: flex; flex-direction: column; gap: 10px;">
+          <label>PDF转其他: <input type="file" accept="application/pdf" @change="handleFileSelect"></label>
+          <label>图片转PDF: <input type="file" accept="image/*" @change="handleFileSelect"></label>
+          <label>OCR: <input type="file" accept="application/pdf,image/*" @change="handleFileSelect"></label>
+        </div>
         
-        <div class="upload-content">
+        <div class="upload-content" style="display: none;">
           <i class="fas fa-cloud-upload-alt upload-icon"></i>
           <p class="upload-text">
             {{ getUploadText() }}
@@ -338,7 +337,9 @@ const loadingFiles = ref(false)
 const existingFiles = ref<any[]>([])
 
 // 文件输入引用
-const fileInput = ref<HTMLInputElement>()
+const pdfInput = ref<HTMLInputElement>();
+const imageInput = ref<HTMLInputElement>();
+const ocrInput = ref<HTMLInputElement>();
 
 // 转换选项
 const wordOptions = ref({
@@ -359,16 +360,20 @@ const functionTabs = [
   { key: 'toExcel', label: 'PDF转Excel', icon: 'fas fa-file-excel' },
   { key: 'toCsv', label: 'PDF转CSV', icon: 'fas fa-file-csv' },
   { key: 'ocr', label: 'OCR识别', icon: 'fas fa-eye' },
-  { key: 'analyze', label: 'PDF分析', icon: 'fas fa-search' }
+  { key: 'analyze', label: 'PDF分析', icon: 'fas fa-search' },
+  { key: 'fromImages', label: '图片转PDF', icon: 'fas fa-file-image' }
 ]
 
 // 计算属性
-const getAcceptedFileTypes = () => {
+const getAcceptedFileTypes = computed(() => {
+  if (activeTab.value === 'fromImages') {
+    return 'image/*'
+  }
   if (activeTab.value === 'ocr') {
     return 'application/pdf,image/*'
   }
   return 'application/pdf'
-}
+})
 
 const getUploadText = () => {
   const texts = {
@@ -376,14 +381,15 @@ const getUploadText = () => {
     toExcel: '选择PDF文件转换为Excel表格',
     toCsv: '选择PDF文件转换为CSV文件',
     ocr: '选择PDF或图片文件进行OCR识别',
-    analyze: '选择PDF文件进行分析'
+    analyze: '选择PDF文件进行分析',
+    fromImages: '选择图片文件转换为PDF'
   }
   return texts[activeTab.value as keyof typeof texts] || '选择文件'
 }
 
 const getSupportedFormats = () => {
-  if (activeTab.value === 'ocr') {
-    return 'PDF, JPG, PNG, TIFF'
+  if (activeTab.value === 'ocr' || activeTab.value === 'fromImages') {
+    return 'JPG, PNG, TIFF'
   }
   return 'PDF'
 }
@@ -399,14 +405,21 @@ const getCurrentFunctionLabel = () => {
     toExcel: '转换为Excel',
     toCsv: '转换为CSV',
     ocr: '开始OCR识别',
-    analyze: '分析PDF'
+    analyze: '分析PDF',
+    fromImages: '转换为PDF'
   }
   return labels[activeTab.value as keyof typeof labels] || '开始处理'
 }
 
 // 方法
 const triggerFileInput = () => {
-  fileInput.value?.click()
+  if (activeTab.value === 'fromImages') {
+    imageInput.value?.click();
+  } else if (activeTab.value === 'ocr') {
+    ocrInput.value?.click();
+  } else {
+    pdfInput.value?.click();
+  }
 }
 
 const handleFileSelect = (event: Event) => {
@@ -431,8 +444,14 @@ const removeFile = () => {
   selectedFile.value = null
   selectedFileId.value = null
   conversionResult.value = null
-  if (fileInput.value) {
-    fileInput.value.value = ''
+  if (pdfInput.value) {
+    pdfInput.value.value = ''
+  }
+  if (imageInput.value) {
+    imageInput.value.value = ''
+  }
+  if (ocrInput.value) {
+    ocrInput.value.value = ''
   }
 }
 
@@ -514,6 +533,20 @@ const startConversion = async () => {
           result = await pdfApi.analyzePdfById(selectedFileId.value!)
         }
         break
+      case 'fromImages':
+        progressText.value = '正在将图片转换为PDF...'
+        if (selectedFile.value) {
+          // This case should ideally handle multiple files, 
+          // but the current UI only supports single file selection.
+          // For now, we'll convert the single selected image.
+          result = await pdfApi.convertImagesToPdf([selectedFile.value])
+        } else {
+          // This case implies multiple existing files should be selected, 
+          // which the UI doesn't support yet. 
+          // We'll assume a single selected file ID for now.
+          result = await pdfApi.imagesToPdfByIds([parseInt(selectedFileId.value!)])
+        }
+        break
       default:
         throw new Error('未知的转换类型')
     }
@@ -547,11 +580,15 @@ const loadExistingFiles = async () => {
     const response = await api.files.getAll()
     if (response.success) {
       // 过滤只显示PDF文件（如果需要的话可以根据当前功能调整）
-      existingFiles.value = response.data.filter((file: any) => 
-        activeTab.value === 'merge' || activeTab.value === 'split' || activeTab.value === 'compress' || activeTab.value === 'toImages'
-          ? file.fileType === 'PDF' 
-          : true // 其他功能支持多种格式
-      )
+      existingFiles.value = response.data.filter((file: any) => {
+        if (activeTab.value === 'fromImages') {
+          return file.fileType.startsWith('image')
+        } else if (activeTab.value === 'merge' || activeTab.value === 'split' || activeTab.value === 'compress' || activeTab.value === 'toImages') {
+          return file.fileType === 'PDF'
+        } else {
+          return true // 其他功能支持多种格式
+        }
+      })
       if (existingFiles.value.length === 0) {
         fileSource.value = 'upload'
       }
