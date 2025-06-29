@@ -189,6 +189,115 @@ pdf:
 - 问题反馈: [Issue Tracker]
 - 邮箱: support@yourcompany.com
 
+## 🛠️ 后端API接口调用方式
+
+### 1. PDF转Word
+- **接口**：`POST /api/pdf-tools/to-word`
+- **参数**：`file` (PDF文件，multipart/form-data)
+- **返回**：
+```json
+{
+  "success": true,
+  "message": "PDF转Word成功",
+  "fileId": 123,
+  "algorithm": "文本提取 + Apache POI"
+}
+```
+
+### 2. PDF转Excel
+- **接口**：`POST /api/pdf-tools/to-excel`
+- **参数**：`file` (PDF文件，multipart/form-data)
+- **返回**：
+```json
+{
+  "success": true,
+  "message": "PDF转Excel成功",
+  "fileId": 123,
+  "algorithm": "Tabula表格识别 + Apache POI"
+}
+```
+
+### 3. PDF转CSV
+- **接口**：`POST /api/pdf-tools/to-csv`
+- **参数**：`file` (PDF文件，multipart/form-data)
+- **返回**：
+```json
+{
+  "success": true,
+  "message": "PDF转CSV成功",
+  "fileId": 123,
+  "algorithm": "Tabula表格识别 + OpenCSV"
+}
+```
+
+### 4. PDF转图片
+- **接口**：`POST /api/pdf-tools/pdf-to-images`
+- **参数**：
+  - `file` (PDF文件，multipart/form-data)
+  - `format` (图片格式，默认PNG，可选JPG)
+  - `dpi` (分辨率，默认200)
+- **返回**：
+```json
+{
+  "success": true,
+  "message": "PDF转图片成功",
+  "data": [
+    { "fileId": 101, "fileName": "xxx_page1.png", "fileSize": 12345, "fileType": "PNG" },
+    { "fileId": 102, "fileName": "xxx_page2.png", "fileSize": 12345, "fileType": "PNG" }
+  ],
+  "count": 2
+}
+```
+
+### 5. Word转PDF
+- **接口**：`POST /api/pdf-tools/word-to-pdf`
+- **参数**：`file` (Word文件，multipart/form-data)
+- **返回**：
+```json
+{
+  "success": true,
+  "message": "Word转PDF成功",
+  "data": { "fileId": 123 }
+}
+```
+
+### 6. Excel转PDF
+- **接口**：`POST /api/pdf-tools/excel-to-pdf`
+- **参数**：`file` (Excel文件，multipart/form-data)
+- **返回**：
+```json
+{
+  "success": true,
+  "message": "Excel转PDF成功",
+  "data": { "fileId": 123 }
+}
+```
+
+### 7. PDF转PPT
+- **接口**：`POST /api/pdf-tools/pdf-to-ppt`
+- **参数**：`file` (PDF文件，multipart/form-data)
+- **返回**：
+```json
+{
+  "success": true,
+  "message": "PDF转PPT成功",
+  "data": { "fileId": 123 }
+}
+```
+
+---
+
+**调用示例（curl）：**
+```bash
+curl -X POST http://localhost:8080/api/pdf-tools/to-word \
+  -F "file=@/path/to/your/test.pdf"
+
+curl -X POST http://localhost:8080/api/pdf-tools/pdf-to-images \
+  -F "file=@/path/to/your/test.pdf" -F "format=PNG" -F "dpi=200"
+```
+
+如需更多接口说明或批量处理、文件下载等用法，请查阅源码或联系开发者。
+
 ---
 
 **⭐ 如果这个项目对您有帮助，请给我们一个 Star！** 

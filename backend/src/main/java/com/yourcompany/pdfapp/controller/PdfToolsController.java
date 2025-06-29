@@ -156,44 +156,25 @@ public class PdfToolsController {
     /**
      * PDF转图片
      */
-    @PostMapping("/to-images")
-    public ResponseEntity<Map<String, Object>> pdfToImages(@RequestBody Map<String, Object> request) {
+    @PostMapping("/pdf-to-images")
+    public ResponseEntity<Map<String, Object>> convertPdfToImages(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "format", defaultValue = "PNG") String format,
+            @RequestParam(value = "dpi", defaultValue = "200") Integer dpi) {
         Map<String, Object> response = new HashMap<>();
-        
         try {
-            Long fileId = Long.valueOf(request.get("fileId").toString());
-            String imageFormat = (String) request.getOrDefault("imageFormat", "PNG");
-            Integer dpi = request.get("dpi") != null ? Integer.valueOf(request.get("dpi").toString()) : 300;
-            String pageRange = (String) request.getOrDefault("pageRange", "all");
-            String customRange = (String) request.get("customRange");
-            
-            // 验证图片格式
-            if (!isValidImageFormat(imageFormat)) {
-                response.put("success", false);
-                response.put("message", "不支持的图片格式: " + imageFormat);
-                return ResponseEntity.badRequest().body(response);
-            }
-            
-            List<FileEntity> imageFiles = pdfService.pdfToImages(fileId, imageFormat, dpi, pageRange, customRange);
-            
+            List<FileEntity> imageFiles = pdfService.convertPdfToImages(file, format, dpi);
             response.put("success", true);
             response.put("message", "PDF转图片成功");
-            response.put("data", imageFiles.stream().map(file -> Map.of(
-                "fileId", file.getId(),
-                "fileName", file.getOriginalName(),
-                "fileSize", file.getFileSize(),
-                "fileType", "IMAGE"
+            response.put("data", imageFiles.stream().map(img -> Map.of(
+                "fileId", img.getId(),
+                "fileName", img.getOriginalName(),
+                "fileSize", img.getFileSize(),
+                "fileType", format
             )).collect(java.util.stream.Collectors.toList()));
             response.put("count", imageFiles.size());
-            
             return ResponseEntity.ok(response);
-            
-        } catch (IllegalArgumentException e) {
-            response.put("success", false);
-            response.put("message", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
-            
-        } catch (IOException e) {
+        } catch (Exception e) {
             response.put("success", false);
             response.put("message", "PDF转图片失败: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
@@ -1197,6 +1178,63 @@ public class PdfToolsController {
         } catch (IOException e) {
             response.put("success", false);
             response.put("message", "数字签名失败: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    /**
+     * Word转PDF
+     */
+    @PostMapping("/word-to-pdf")
+    public ResponseEntity<Map<String, Object>> convertWordToPdf(@RequestParam("file") MultipartFile file) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            Long fileId = pdfService.convertWordToPdf(file);
+            response.put("success", true);
+            response.put("message", "Word转PDF成功");
+            response.put("data", Map.of("fileId", fileId));
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "Word转PDF失败: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    /**
+     * Excel转PDF
+     */
+    @PostMapping("/excel-to-pdf")
+    public ResponseEntity<Map<String, Object>> convertExcelToPdf(@RequestParam("file") MultipartFile file) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            Long fileId = pdfService.convertExcelToPdf(file);
+            response.put("success", true);
+            response.put("message", "Excel转PDF成功");
+            response.put("data", Map.of("fileId", fileId));
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "Excel转PDF失败: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    /**
+     * PDF转PPT
+     */
+    @PostMapping("/pdf-to-ppt")
+    public ResponseEntity<Map<String, Object>> convertPdfToPpt(@RequestParam("file") MultipartFile file) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            Long fileId = pdfService.convertPdfToPpt(file);
+            response.put("success", true);
+            response.put("message", "PDF转PPT成功");
+            response.put("data", Map.of("fileId", fileId));
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "PDF转PPT失败: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }

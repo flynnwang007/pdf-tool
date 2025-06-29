@@ -542,7 +542,15 @@ export const pdfApi = {
       headers: { 'Content-Type': 'application/json' }
     })
     return response.data
-  }
+  },
+
+  // === 新增功能：Word转PDF ===
+  convertWordToPdf: async (file: File) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    const response = await api.post('/pdf-tools/word-to-pdf', formData)
+    return response.data
+  },
 }
 
 // 兼容旧版本的pdfToolsApi

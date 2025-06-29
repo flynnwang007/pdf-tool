@@ -195,6 +195,11 @@
           <span class="algorithm-info">PDFBox + Tabula表格检测</span>
         </div>
       </div>
+
+      <!-- Word转PDF选项 -->
+      <div v-if="activeTab === 'wordToPdf'" class="option-group">
+        <WordToPdf />
+      </div>
     </div>
 
     <!-- 转换按钮 -->
@@ -322,6 +327,7 @@
 import { ref, computed } from 'vue'
 import { pdfApi, utils } from '../api'
 import api from '@/api'
+import WordToPdf from './WordToPdf.vue'
 
 // 响应式数据
 const activeTab = ref('toWord')
@@ -361,7 +367,8 @@ const functionTabs = [
   { key: 'toCsv', label: 'PDF转CSV', icon: 'fas fa-file-csv' },
   { key: 'ocr', label: 'OCR识别', icon: 'fas fa-eye' },
   { key: 'analyze', label: 'PDF分析', icon: 'fas fa-search' },
-  { key: 'fromImages', label: '图片转PDF', icon: 'fas fa-file-image' }
+  { key: 'fromImages', label: '图片转PDF', icon: 'fas fa-file-image' },
+  { key: 'wordToPdf', label: 'Word转PDF', icon: 'fas fa-file-word' }
 ]
 
 // 计算属性
@@ -382,7 +389,8 @@ const getUploadText = () => {
     toCsv: '选择PDF文件转换为CSV文件',
     ocr: '选择PDF或图片文件进行OCR识别',
     analyze: '选择PDF文件进行分析',
-    fromImages: '选择图片文件转换为PDF'
+    fromImages: '选择图片文件转换为PDF',
+    wordToPdf: '选择Word文件转换为PDF'
   }
   return texts[activeTab.value as keyof typeof texts] || '选择文件'
 }
@@ -406,7 +414,8 @@ const getCurrentFunctionLabel = () => {
     toCsv: '转换为CSV',
     ocr: '开始OCR识别',
     analyze: '分析PDF',
-    fromImages: '转换为PDF'
+    fromImages: '转换为PDF',
+    wordToPdf: '转换为PDF'
   }
   return labels[activeTab.value as keyof typeof labels] || '开始处理'
 }
@@ -545,6 +554,14 @@ const startConversion = async () => {
           // which the UI doesn't support yet. 
           // We'll assume a single selected file ID for now.
           result = await pdfApi.imagesToPdfByIds([parseInt(selectedFileId.value!)])
+        }
+        break
+      case 'wordToPdf':
+        progressText.value = '正在将Word文档转换为PDF...'
+        if (selectedFile.value) {
+          result = await pdfApi.convertWordToPdf(selectedFile.value)
+        } else {
+          throw new Error('请先选择Word文件')
         }
         break
       default:

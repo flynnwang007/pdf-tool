@@ -40,5 +40,6 @@ declare module 'vue' {
     RouterView: typeof import('vue-router')['RouterView']
     SignupForm: typeof import('./src/components/auth/SignupForm.vue')['default']
     UserAvatar: typeof import('./src/components/auth/UserAvatar.vue')['default']
+    WordToPdf: typeof import('./src/components/WordToPdf.vue')['default']
   }
 }
