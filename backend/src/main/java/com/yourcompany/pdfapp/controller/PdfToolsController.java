@@ -1238,4 +1238,89 @@ public class PdfToolsController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
+
+    /**
+     * Word转PDF - 基于文件ID
+     */
+    @PostMapping("/word-to-pdf/{fileId}")
+    public ResponseEntity<Map<String, Object>> convertWordToPdfById(@PathVariable Long fileId) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            Long pdfFileId = pdfService.convertWordToPdfById(fileId);
+            response.put("success", true);
+            response.put("message", "Word转PDF成功");
+            response.put("data", Map.of("fileId", pdfFileId));
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "Word转PDF失败: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    /**
+     * Excel转PDF - 基于文件ID
+     */
+    @PostMapping("/excel-to-pdf/{fileId}")
+    public ResponseEntity<Map<String, Object>> convertExcelToPdfById(@PathVariable Long fileId) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            Long pdfFileId = pdfService.convertExcelToPdfById(fileId);
+            response.put("success", true);
+            response.put("message", "Excel转PDF成功");
+            response.put("data", Map.of("fileId", pdfFileId));
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "Excel转PDF失败: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    /**
+     * PDF转PPT - 基于文件ID
+     */
+    @PostMapping("/pdf-to-ppt/{fileId}")
+    public ResponseEntity<Map<String, Object>> convertPdfToPptById(@PathVariable Long fileId) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            Long pptFileId = pdfService.convertPdfToPptById(fileId);
+            response.put("success", true);
+            response.put("message", "PDF转PPT成功");
+            response.put("data", Map.of("fileId", pptFileId));
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "PDF转PPT失败: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    /**
+     * PDF转图片 - 基于文件ID
+     */
+    @PostMapping("/pdf-to-images/{fileId}")
+    public ResponseEntity<Map<String, Object>> convertPdfToImagesById(
+            @PathVariable Long fileId,
+            @RequestParam(value = "format", defaultValue = "PNG") String format,
+            @RequestParam(value = "dpi", defaultValue = "200") Integer dpi) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            List<FileEntity> imageFiles = pdfService.convertPdfToImagesById(fileId, format, dpi);
+            response.put("success", true);
+            response.put("message", "PDF转图片成功");
+            response.put("data", imageFiles.stream().map(img -> Map.of(
+                "fileId", img.getId(),
+                "fileName", img.getOriginalName(),
+                "fileSize", img.getFileSize(),
+                "fileType", format
+            )).collect(java.util.stream.Collectors.toList()));
+            response.put("count", imageFiles.size());
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "PDF转图片失败: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
 } 

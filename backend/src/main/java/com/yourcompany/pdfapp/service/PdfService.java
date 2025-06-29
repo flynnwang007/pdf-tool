@@ -2261,4 +2261,126 @@ public class PdfService {
         }
         return imageFiles;
     }
+
+    /**
+     * Word转PDF - 基于文件ID
+     */
+    public Long convertWordToPdfById(Long fileId) throws IOException {
+        FileEntity wordFile = fileService.getFile(fileId)
+            .orElseThrow(() -> new IllegalArgumentException("文件不存在"));
+        String originalName = wordFile.getOriginalName();
+        String ext = originalName != null && originalName.toLowerCase().endsWith(".doc") ? ".doc" : ".docx";
+        java.io.File tempWord = java.io.File.createTempFile("upload_", ext);
+        java.nio.file.Files.copy(java.nio.file.Paths.get(wordFile.getFilePath()), tempWord.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+
+        java.io.File tempPdf = java.io.File.createTempFile("converted_", ".pdf");
+        LocalOfficeManager officeManager = LocalOfficeManager.install();
+        try {
+            officeManager.start();
+            JodConverter.convert(tempWord).to(tempPdf).execute();
+        } catch (Exception e) {
+            throw new IOException("Word转PDF失败: " + e.getMessage(), e);
+        } finally {
+            try { officeManager.stop(); } catch (Exception ignore) {}
+        }
+
+        FileEntity saved = saveProcessedFile(tempPdf.toPath(), originalName.replaceAll("\\.docx?$", ".pdf"), "Word转PDF");
+        return saved.getId();
+    }
+
+    /**
+     * Excel转PDF - 基于文件ID
+     */
+    public Long convertExcelToPdfById(Long fileId) throws IOException {
+        FileEntity excelFile = fileService.getFile(fileId)
+            .orElseThrow(() -> new IllegalArgumentException("文件不存在"));
+        String originalName = excelFile.getOriginalName();
+        String ext = originalName != null && originalName.toLowerCase().endsWith(".xls") ? ".xls" : ".xlsx";
+        java.io.File tempExcel = java.io.File.createTempFile("upload_", ext);
+        java.nio.file.Files.copy(java.nio.file.Paths.get(excelFile.getFilePath()), tempExcel.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+
+        java.io.File tempPdf = java.io.File.createTempFile("converted_", ".pdf");
+        LocalOfficeManager officeManager = LocalOfficeManager.install();
+        try {
+            officeManager.start();
+            JodConverter.convert(tempExcel).to(tempPdf).execute();
+        } catch (Exception e) {
+            throw new IOException("Excel转PDF失败: " + e.getMessage(), e);
+        } finally {
+            try { officeManager.stop(); } catch (Exception ignore) {}
+        }
+
+        FileEntity saved = saveProcessedFile(tempPdf.toPath(), originalName.replaceAll("\\.xlsx?$", ".pdf"), "Excel转PDF");
+        return saved.getId();
+    }
+
+    /**
+     * PDF转PPT - 基于文件ID
+     */
+    public Long convertPdfToPptById(Long fileId) throws IOException {
+        FileEntity pdfFile = fileService.getFile(fileId)
+            .orElseThrow(() -> new IllegalArgumentException("文件不存在"));
+        String originalName = pdfFile.getOriginalName();
+        byte[] fileContent = java.nio.file.Files.readAllBytes(java.nio.file.Paths.get(pdfFile.getFilePath()));
+
+        try (PDDocument document = Loader.loadPDF(fileContent);
+             org.apache.poi.xslf.usermodel.XMLSlideShow ppt = new org.apache.poi.xslf.usermodel.XMLSlideShow()) {
+
+            org.apache.pdfbox.rendering.PDFRenderer renderer = new org.apache.pdfbox.rendering.PDFRenderer(document);
+
+            for (int i = 0; i < document.getNumberOfPages(); i++) {
+                java.awt.image.BufferedImage image = renderer.renderImageWithDPI(i, 200, org.apache.pdfbox.rendering.ImageType.RGB);
+                java.io.ByteArrayOutputStream imgOut = new java.io.ByteArrayOutputStream();
+                javax.imageio.ImageIO.write(image, "png", imgOut);
+
+                org.apache.poi.sl.usermodel.PictureData.PictureType picType = org.apache.poi.sl.usermodel.PictureData.PictureType.PNG;
+                org.apache.poi.xslf.usermodel.XSLFPictureData picData = ppt.addPicture(imgOut.toByteArray(), picType);
+                org.apache.poi.xslf.usermodel.XSLFSlide slide = ppt.createSlide();
+                org.apache.poi.xslf.usermodel.XSLFPictureShape pic = slide.createPicture(picData);
+
+                pic.setAnchor(new java.awt.Rectangle(0, 0, 960, 720)); // 16:9
+            }
+
+            String outputName = getFileNameWithoutExtension(originalName) + ".pptx";
+            java.nio.file.Path outputPath = createOutputFile(outputName);
+
+            try (java.io.FileOutputStream fos = new java.io.FileOutputStream(outputPath.toFile())) {
+                ppt.write(fos);
+            }
+
+            FileEntity result = saveProcessedFile(outputPath, outputName, "PDF转PPT");
+            return result.getId();
+        }
+    }
+
+    /**
+     * PDF转图片 - 基于文件ID
+     */
+    public List<FileEntity> convertPdfToImagesById(Long fileId, String format, int dpi) throws IOException {
+        FileEntity pdfFile = fileService.getFile(fileId)
+            .orElseThrow(() -> new IllegalArgumentException("文件不存在"));
+        byte[] fileContent = java.nio.file.Files.readAllBytes(java.nio.file.Paths.get(pdfFile.getFilePath()));
+        String originalName = pdfFile.getOriginalName();
+
+        List<FileEntity> imageFiles = new ArrayList<>();
+        try (PDDocument document = Loader.loadPDF(fileContent)) {
+            PDFRenderer renderer = new PDFRenderer(document);
+            String normalizedFormat = format.toUpperCase();
+            if ("JPEG".equals(normalizedFormat)) normalizedFormat = "JPG";
+
+            for (int i = 0; i < document.getNumberOfPages(); i++) {
+                BufferedImage image = renderer.renderImageWithDPI(i, dpi, ImageType.RGB);
+                String fileName = getFileNameWithoutExtension(originalName) + "_page" + (i + 1) + "." + normalizedFormat.toLowerCase();
+                Path outputPath = createOutputFile(fileName);
+
+                if (!ImageIO.write(image, normalizedFormat, outputPath.toFile())) {
+                    throw new IOException("无法写入图片格式: " + normalizedFormat);
+                }
+
+                FileEntity imageFile = saveProcessedFile(outputPath, fileName, "PDF转图片");
+                imageFiles.add(imageFile);
+            }
+        }
+        return imageFiles;
+    }
 } 
