@@ -230,7 +230,7 @@ export const pdfApi = {
     formData.append('format', format)
     formData.append('dpi', dpi.toString())
     
-    const response = await api.post('/pdf-tools/to-images', formData)
+    const response = await api.post('/pdf-tools/upload-to-images', formData)
     return response.data
   },
 

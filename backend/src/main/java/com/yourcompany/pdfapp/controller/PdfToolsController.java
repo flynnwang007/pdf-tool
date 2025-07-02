@@ -154,9 +154,9 @@ public class PdfToolsController {
     }
     
     /**
-     * PDF转图片
+     * PDF转图片 - 文件上传方式
      */
-    @PostMapping("/pdf-to-images")
+    @PostMapping("/upload-to-images")
     public ResponseEntity<Map<String, Object>> convertPdfToImages(
             @RequestParam("file") MultipartFile file,
             @RequestParam(value = "format", defaultValue = "PNG") String format,
@@ -173,6 +173,52 @@ public class PdfToolsController {
                 "fileType", format
             )).collect(java.util.stream.Collectors.toList()));
             response.put("count", imageFiles.size());
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "PDF转图片失败: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    /**
+     * PDF转图片 - 支持JSON参数（用于高级选项）
+     */
+    @PostMapping("/to-images")
+    public ResponseEntity<Map<String, Object>> convertPdfToImagesWithOptions(@RequestBody Map<String, Object> request) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            Long fileId = Long.valueOf(request.get("fileId").toString());
+            String imageFormat = (String) request.getOrDefault("imageFormat", "PNG");
+            Integer dpi = Integer.valueOf(request.getOrDefault("dpi", 200).toString());
+            String pageRange = (String) request.getOrDefault("pageRange", "all");
+            String customRange = (String) request.get("customRange");
+
+            // 如果有页面范围参数，使用高级转换方法
+            if (pageRange != null && !pageRange.equals("all")) {
+                List<FileEntity> imageFiles = pdfService.pdfToImages(fileId, imageFormat, dpi, pageRange, customRange);
+                response.put("success", true);
+                response.put("message", "PDF转图片成功");
+                response.put("data", imageFiles.stream().map(img -> Map.of(
+                    "fileId", img.getId(),
+                    "fileName", img.getOriginalName(),
+                    "fileSize", img.getFileSize(),
+                    "fileType", imageFormat
+                )).collect(java.util.stream.Collectors.toList()));
+                response.put("count", imageFiles.size());
+            } else {
+                // 简单转换
+                List<FileEntity> imageFiles = pdfService.convertPdfToImagesById(fileId, imageFormat, dpi);
+                response.put("success", true);
+                response.put("message", "PDF转图片成功");
+                response.put("data", imageFiles.stream().map(img -> Map.of(
+                    "fileId", img.getId(),
+                    "fileName", img.getOriginalName(),
+                    "fileSize", img.getFileSize(),
+                    "fileType", imageFormat
+                )).collect(java.util.stream.Collectors.toList()));
+                response.put("count", imageFiles.size());
+            }
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             response.put("success", false);
@@ -1299,7 +1345,7 @@ public class PdfToolsController {
     /**
      * PDF转图片 - 基于文件ID
      */
-    @PostMapping("/pdf-to-images/{fileId}")
+    @PostMapping("/to-images/{fileId}")
     public ResponseEntity<Map<String, Object>> convertPdfToImagesById(
             @PathVariable Long fileId,
             @RequestParam(value = "format", defaultValue = "PNG") String format,
