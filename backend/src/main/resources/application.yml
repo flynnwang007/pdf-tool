@@ -2,9 +2,6 @@ server:
   port: 8080
   servlet:
     context-path: /
-    multipart:
-      max-file-size: 100MB
-      max-request-size: 100MB
 
 spring:
   application:
@@ -45,14 +42,14 @@ spring:
   servlet:
     multipart:
       enabled: true
-      max-file-size: 100MB
-      max-request-size: 100MB
+      max-file-size: 200MB
+      max-request-size: 200MB
 
 # 应用自定义配置
 app:
   file:
     upload-path: ./uploads
-    max-file-size: 104857600  # 100MB
+    max-file-size: 209715200  # 200MB
     allowed-types:
       - application/pdf
       - application/msword
