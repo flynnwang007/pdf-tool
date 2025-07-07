@@ -25,7 +25,7 @@ app:
       enabled: true
       languages: eng,chi_sim
       tesseract-path: /usr/bin/tesseract
-      data-path: /usr/share/tesseract-ocr/4.00/tessdata
+      data-path: /usr/share/tesseract-ocr/5/tessdata
     fonts:
       chinese-paths:
         # Ubuntu/Debian中文字体路径
