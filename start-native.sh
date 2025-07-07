@@ -89,8 +89,9 @@ print_status "找到jar文件: $JAR_FILE"
 print_info "启动后端服务..."
 cd $PROJECT_ROOT
 
-# 关键：设置 so 路径
+# 关键：设置 so 路径和Tesseract语言包路径
 export LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
+export TESSDATA_PREFIX=/usr/share/tesseract-ocr/5/
 
 nohup java -Djava.library.path=/usr/lib/x86_64-linux-gnu -jar backend/$JAR_FILE \
     --server.port=8080 \
