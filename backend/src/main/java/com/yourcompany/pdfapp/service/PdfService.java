@@ -700,6 +700,83 @@ public class PdfService {
         // 使用已有的基于ID的方法
         return getPdfInfoById(savedFile.getId());
     }
+
+    /**
+     * PDF文本提取 - 基于文件上传
+     */
+    public String extractText(MultipartFile file) throws IOException {
+        // 先保存上传的文件
+        FileEntity savedFile = fileService.saveFile(file, getCurrentUserId());
+        
+        // 使用已有的基于ID的方法
+        return extractTextById(savedFile.getId());
+    }
+
+    /**
+     * PDF文本提取 - 基于文件ID
+     */
+    public String extractTextById(Long fileId) throws IOException {
+        byte[] fileContent = fileService.getFileContent(fileId);
+        Optional<FileEntity> originalFile = fileService.getFile(fileId);
+        
+        if (originalFile.isEmpty()) {
+            throw new IllegalArgumentException("原文件不存在");
+        }
+        
+        try (PDDocument document = Loader.loadPDF(fileContent)) {
+            PDFTextStripper textStripper = new PDFTextStripper();
+            return textStripper.getText(document);
+        }
+    }
+
+    /**
+     * PDF文本提取 - 支持页面范围
+     */
+    public String extractTextByRange(Long fileId, String pageRange, String customRange) throws IOException {
+        byte[] fileContent = fileService.getFileContent(fileId);
+        Optional<FileEntity> originalFile = fileService.getFile(fileId);
+        
+        if (originalFile.isEmpty()) {
+            throw new IllegalArgumentException("原文件不存在");
+        }
+        
+        try (PDDocument document = Loader.loadPDF(fileContent)) {
+            PDFTextStripper textStripper = new PDFTextStripper();
+            
+            // 处理页面范围
+            if (!"all".equals(pageRange)) {
+                List<Integer> pagesToExtract = parsePageRange(pageRange, customRange, document.getNumberOfPages());
+                
+                if (pagesToExtract.isEmpty()) {
+                    throw new IllegalArgumentException("没有指定要提取的页面");
+                }
+                
+                // 如果指定了页面范围，提取指定页面的文本
+                StringBuilder extractedText = new StringBuilder();
+                
+                for (Integer pageNum : pagesToExtract) {
+                    // parsePageRange返回0基索引，PDFTextStripper需要1基索引
+                    int pageIndex = pageNum + 1;
+                    
+                    textStripper.setStartPage(pageIndex);
+                    textStripper.setEndPage(pageIndex);
+                    
+                    String pageText = textStripper.getText(document);
+                    extractedText.append(pageText);
+                    
+                    // 添加页面分隔符（除了最后一个页面）
+                    if (!pagesToExtract.get(pagesToExtract.size() - 1).equals(pageNum)) {
+                        extractedText.append("\n--- 第 ").append(pageIndex).append(" 页 ---\n");
+                    }
+                }
+                
+                return extractedText.toString();
+            } else {
+                // 提取所有页面的文本
+                return textStripper.getText(document);
+            }
+        }
+    }
     
     // 辅助方法
     

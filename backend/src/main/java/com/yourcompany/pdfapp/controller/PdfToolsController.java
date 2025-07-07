@@ -493,7 +493,8 @@ public class PdfToolsController {
         features.put("analysis", Map.of(
             "pdfInfo", "PDF信息提取 - PDFBox文档信息",
             "tableDetection", "表格检测 - Tabula算法",
-            "textExtraction", "文本提取 - PDFBox文本提取器"
+            "textExtraction", "文本提取 - PDFBox文本提取器",
+            "extractText", "专门的文本提取接口 - 支持页面范围"
         ));
         
         Map<String, Object> response = new HashMap<>();
@@ -1366,6 +1367,95 @@ public class PdfToolsController {
         } catch (Exception e) {
             response.put("success", false);
             response.put("message", "PDF转图片失败: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    /**
+     * 提取PDF文本内容
+     */
+    @PostMapping("/extract-text")
+    public ResponseEntity<Map<String, Object>> extractText(
+            @RequestParam("file") MultipartFile file) {
+        
+        try {
+            String extractedText = pdfService.extractText(file);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "PDF文本提取成功");
+            response.put("extractedText", extractedText);
+            response.put("textLength", extractedText.length());
+            response.put("algorithm", "PDFBox文本提取器");
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("PDF文本提取失败", e);
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "PDF文本提取失败: " + e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    /**
+     * 提取PDF文本内容 - 基于文件ID
+     */
+    @PostMapping("/extract-text/{fileId}")
+    public ResponseEntity<Map<String, Object>> extractTextById(@PathVariable Long fileId) {
+        
+        try {
+            String extractedText = pdfService.extractTextById(fileId);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "PDF文本提取成功");
+            response.put("extractedText", extractedText);
+            response.put("textLength", extractedText.length());
+            response.put("algorithm", "PDFBox文本提取器");
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("PDF文本提取失败", e);
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "PDF文本提取失败: " + e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    /**
+     * 提取PDF文本内容 - 支持页面范围
+     */
+    @PostMapping("/extract-text-range")
+    public ResponseEntity<Map<String, Object>> extractTextByRange(@RequestBody Map<String, Object> request) {
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            Long fileId = Long.valueOf(request.get("fileId").toString());
+            String pageRange = (String) request.getOrDefault("pageRange", "all");
+            String customRange = (String) request.get("customRange");
+            
+            String extractedText = pdfService.extractTextByRange(fileId, pageRange, customRange);
+            
+            response.put("success", true);
+            response.put("message", "PDF文本提取成功");
+            response.put("extractedText", extractedText);
+            response.put("textLength", extractedText.length());
+            response.put("algorithm", "PDFBox文本提取器");
+            response.put("pageRange", pageRange);
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (IllegalArgumentException e) {
+            response.put("success", false);
+            response.put("message", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+            
+        } catch (Exception e) {
+            log.error("PDF文本提取失败", e);
+            response.put("success", false);
+            response.put("message", "PDF文本提取失败: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
