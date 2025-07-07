@@ -88,7 +88,11 @@ print_status "找到jar文件: $JAR_FILE"
 # 启动后端
 print_info "启动后端服务..."
 cd $PROJECT_ROOT
-nohup java -jar backend/$JAR_FILE \
+
+# 关键：设置 so 路径
+export LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
+
+nohup java -Djava.library.path=/usr/lib/x86_64-linux-gnu -jar backend/$JAR_FILE \
     --server.port=8080 \
     --spring.profiles.active=prod \
     > logs/backend.log 2>&1 &
