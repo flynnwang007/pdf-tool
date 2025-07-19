@@ -20,9 +20,17 @@ public class JwtService {
     
     @Value("${supabase.jwt.secret:your-supabase-jwt-secret-here}")
     private String jwtSecret;
+
+    @Value("${MEMFIRE_JWT_SECRET:0d37e31b-3452-4949-8e19-04bc619c78c9}")
+    private String memfireJwtSecret;
     
     public String extractUserId(String token) {
-        return extractClaim(token, Claims::getSubject);
+        return extractClaim(token, claims -> {
+            String sub = claims.getSubject();
+            if (sub != null && !sub.trim().isEmpty()) return sub;
+            Object uid = claims.get("uid");
+            return uid != null ? uid.toString() : null;
+        });
     }
     
     public String extractEmail(String token) {
@@ -39,17 +47,23 @@ public class JwtService {
     }
     
     private Claims extractAllClaims(String token) {
-        try {
-            SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes());
-            return Jwts.parser()
-                    .verifyWith(key)
-                    .build()
-                    .parseSignedClaims(token)
-                    .getPayload();
-        } catch (JwtException e) {
-            logger.error("JWT解析失败: {}", e.getMessage());
-            throw new IllegalArgumentException("无效的JWT令牌", e);
+        // 先用supabase.jwt.secret验，失败再用memfireJwtSecret
+        Exception lastException = null;
+        for (String secret : new String[]{jwtSecret, memfireJwtSecret}) {
+            try {
+                SecretKey key = Keys.hmacShaKeyFor(secret.getBytes());
+                return Jwts.parser()
+                        .verifyWith(key)
+                        .build()
+                        .parseSignedClaims(token)
+                        .getPayload();
+            } catch (JwtException e) {
+                lastException = e;
+                logger.warn("JWT解析失败，尝试下一个秘钥: {}", e.getMessage());
+            }
         }
+        logger.error("所有JWT秘钥均无法解析token");
+        throw new IllegalArgumentException("无效的JWT令牌", lastException);
     }
     
     private Boolean isTokenExpired(String token) {
@@ -64,41 +78,27 @@ public class JwtService {
     public Boolean validateToken(String token) {
         try {
             logger.debug("开始验证JWT令牌，长度: {}", token.length());
-            
-            // 检查令牌格式和签名
             Claims claims = extractAllClaims(token);
-            
-            // 检查过期时间
             if (isTokenExpired(token)) {
                 logger.warn("JWT令牌已过期");
                 return false;
             }
-            
-            // 检查角色和用户ID
             String role = (String) claims.get("role");
-            String userId = claims.getSubject();
-            
-            // 临时允许anon角色访问（用于测试）
+            String userId = extractUserId(token);
             if ("anon".equals(role)) {
                 logger.debug("临时允许anon角色访问");
                 return true;
             }
-            
-            // 检查必要字段
             if (userId == null || userId.trim().isEmpty()) {
                 logger.warn("JWT令牌缺少用户ID");
                 return false;
             }
-            
-            // 检查发行者（可选）
             String issuer = claims.getIssuer();
-            if (issuer != null && !issuer.equals("supabase")) {
+            if (issuer != null && !issuer.equals("supabase") && !issuer.equals("memfiredb")) {
                 logger.debug("JWT发行者: {}", issuer);
             }
-            
             logger.debug("JWT令牌验证成功，用户ID: {}, 角色: {}", userId, role);
             return true;
-            
         } catch (Exception e) {
             logger.error("JWT令牌验证失败: {} - {}", e.getClass().getSimpleName(), e.getMessage());
             return false;
