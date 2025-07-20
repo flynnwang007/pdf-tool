@@ -40,6 +40,11 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
                 if (jwtService.validateToken(token)) {
                     Claims claims = jwtService.parseToken(token);
                     String userId = claims.getSubject();
+                    if (userId == null || userId.trim().isEmpty()) {
+                        // 尝试从uid字段获取用户ID
+                        Object uid = claims.get("uid");
+                        userId = uid != null ? uid.toString() : null;
+                    }
                     String email = (String) claims.get("email");
                     
                 // 创建认证对象

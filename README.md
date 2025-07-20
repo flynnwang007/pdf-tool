@@ -300,4 +300,301 @@ curl -X POST http://localhost:8080/api/pdf-tools/pdf-to-images \
 
 ---
 
-**⭐ 如果这个项目对您有帮助，请给我们一个 Star！** 
+**⭐ 如果这个项目对您有帮助，请给我们一个 Star！**
+
+## 🛠️ 工具页面功能API接口文档
+
+### 1. 文件上传
+- **接口**：`POST /api/files/upload`
+- **参数**：`file` (任意支持的文件，multipart/form-data)
+- **返回**：
+```json
+{
+  "success": true,
+  "data": { "fileId": 123, "originalName": "test.pdf", "fileSize": 12345, "fileType": "PDF" }
+}
+```
+- **示例**：
+```bash
+curl -X POST http://localhost:8080/api/files/upload -F "file=@/path/to/your/test.pdf"
+```
+
+---
+
+### 2. PDF合并
+- **接口**：`POST /api/pdf-tools/merge`
+- **参数**：
+  - `fileIds` (int数组，待合并PDF文件ID)
+  - `outputFileName` (可选，合并后文件名)
+- **返回**：
+```json
+{
+  "success": true,
+  "data": { "fileId": 123, "fileName": "merged.pdf", "fileSize": 12345 }
+}
+```
+- **示例**：
+```bash
+curl -X POST http://localhost:8080/api/pdf-tools/merge \
+  -H "Content-Type: application/json" \
+  -d '{"fileIds":[1,2,3], "outputFileName":"merged.pdf"}'
+```
+
+---
+
+### 3. PDF拆分
+- **接口**：`POST /api/pdf-tools/split`
+- **参数**：
+  - `fileId` (int，PDF文件ID)
+  - `splitType` (string，'pages' 或 'range')
+  - `options` (object，按页数如`{"pageCount":2}`，按范围如`{"ranges":[{"start":1,"end":5}]}`)
+- **返回**：
+```json
+{
+  "success": true,
+  "data": [ { "fileId": 201, "fileName": "split_1.pdf" }, ... ]
+}
+```
+
+---
+
+### 4. PDF压缩
+- **接口**：`POST /api/pdf-tools/compress`
+- **参数**：
+  - `fileId` (int，PDF文件ID)
+  - `compressionLevel` (string，'low'/'medium'/'high')
+- **返回**：
+```json
+{
+  "success": true,
+  "data": { "fileId": 301, "fileName": "compressed.pdf" }
+}
+```
+
+---
+
+### 5. PDF转Word
+- **接口**：`POST /api/pdf-tools/to-word/{fileId}` 或 `POST /api/pdf-tools/to-word` (上传文件)
+- **参数**：
+  - `fileId` (路径参数，已上传文件)
+  - 或 `file` (multipart/form-data)
+- **返回**：
+```json
+{
+  "success": true,
+  "data": { "fileId": 401, "fileName": "converted.docx" }
+}
+```
+
+---
+
+### 6. PDF转Excel
+- **接口**：`POST /api/pdf-tools/to-excel/{fileId}` 或 `POST /api/pdf-tools/to-excel`
+- **参数**：同上
+- **返回**：同上
+
+---
+
+### 7. PDF转图片
+- **接口**：`POST /api/pdf-tools/to-images`
+- **参数**：
+  - `fileId` (int，PDF文件ID)
+  - `imageFormat` (string，PNG/JPG等)
+  - `dpi` (int，分辨率)
+  - `pageRange` (string，'all'或'custom')
+  - `customRange` (string，页码范围如'1-5,8')
+- **返回**：
+```json
+{
+  "success": true,
+  "data": [ { "fileId": 501, "fileName": "page1.png" }, ... ]
+}
+```
+
+---
+
+### 8. 图片转PDF
+- **接口**：`POST /api/pdf-tools/from-images`
+- **参数**：
+  - `imageFileIds` (int数组，图片文件ID)
+  - `outputFileName` (可选)
+- **返回**：
+```json
+{
+  "success": true,
+  "data": { "fileId": 601, "fileName": "images_to_pdf.pdf" }
+}
+```
+
+---
+
+### 9. 页面旋转
+- **接口**：`POST /api/pdf-tools/rotate`
+- **参数**：
+  - `fileId` (int)
+  - `pageRange` (string)
+  - `customRange` (string)
+  - `rotation` (int，90/180/270)
+- **返回**：
+```json
+{
+  "success": true,
+  "data": { "fileId": 701, "fileName": "rotated.pdf" }
+}
+```
+
+---
+
+### 10. 删除页面
+- **接口**：`POST /api/pdf-tools/delete-pages`
+- **参数**：
+  - `fileId` (int)
+  - `pageRange` (string)
+  - `customRange` (string)
+- **返回**：
+```json
+{
+  "success": true,
+  "data": { "fileId": 801, "fileName": "deleted.pdf" }
+}
+```
+
+---
+
+### 11. 提取页面
+- **接口**：`POST /api/pdf-tools/extract-pages`
+- **参数**：同上
+- **返回**：同上
+
+---
+
+### 12. 重新排序页面
+- **接口**：`POST /api/pdf-tools/reorder-pages`
+- **参数**：
+  - `fileId` (int)
+  - `pageOrder` (int数组，新顺序)
+- **返回**：
+```json
+{
+  "success": true,
+  "data": { "fileId": 901, "fileName": "reordered.pdf" }
+}
+```
+
+---
+
+### 13. 添加水印
+- **接口**：
+  - 文字水印：`POST /api/pdf-tools/watermark`
+  - 图片水印：`POST /api/pdf-tools/watermark-with-image`
+- **参数**：
+  - `fileId` (int)
+  - `watermarkOptions` (object，见下)
+  - 图片水印需`watermarkImage` (File)
+- **watermarkOptions示例**：
+```json
+{
+  "watermarkType": "text", // 或"image"
+  "watermarkText": "Confidential",
+  "watermarkPosition": "center",
+  "watermarkOpacity": 50,
+  "watermarkSize": 24,
+  "watermarkColor": "#666666",
+  "watermarkRotation": 0,
+  "pageRange": "all",
+  "customRange": "1-5"
+}
+```
+
+---
+
+### 14. PDF加密
+- **接口**：`POST /api/pdf-tools/encrypt`
+- **参数**：
+  - `fileId` (int)
+  - `userPassword` (string)
+  - `ownerPassword` (string，可选)
+- **返回**：
+```json
+{
+  "success": true,
+  "data": { "fileId": 1001, "fileName": "encrypted.pdf" }
+}
+```
+
+---
+
+### 15. PDF解密
+- **接口**：`POST /api/pdf-tools/decrypt`
+- **参数**：
+  - `fileId` (int)
+  - `password` (string)
+- **返回**：同上
+
+---
+
+### 16. 内容编辑（涂黑）
+- **接口**：`POST /api/pdf-tools/redact`
+- **参数**：
+  - `fileId` (int)
+  - `keywords` (string数组)
+  - `pageRange` (string，可选)
+  - `customRange` (string，可选)
+- **返回**：同上
+
+---
+
+### 17. OCR文字识别
+- **接口**：`POST /api/pdf-tools/ocr/{fileId}?language=chi_sim` 或 `POST /api/pdf-tools/ocr` (上传文件)
+- **参数**：
+  - `fileId` (路径参数)
+  - `language` (string，语言代码如'chi_sim','eng')
+- **返回**：
+```json
+{
+  "success": true,
+  "data": { "text": "识别结果..." }
+}
+```
+
+---
+
+### 18. 数字签名
+- **接口**：`POST /api/pdf-tools/digital-sign`
+- **参数**：
+  - `fileId` (int)
+  - `signerName` (string)
+  - `reason` (string，可选)
+  - `location` (string，可选)
+  - `pageRange` (string，可选)
+  - `customRange` (string，可选)
+- **返回**：
+```json
+{
+  "success": true,
+  "data": { "fileId": 1101, "fileName": "signed.pdf" }
+}
+```
+
+---
+
+### 19. 文件下载
+- **接口**：`GET /api/files/{fileId}/download`
+- **参数**：
+  - `fileId` (路径参数)
+- **返回**：文件流
+
+---
+
+**错误处理说明**：
+- 401 未授权，403 禁止访问，404 资源不存在，500 服务器错误，均返回：
+```json
+{
+  "success": false,
+  "message": "错误描述"
+}
+```
+
+---
+
+如需更多接口细节或批量处理用法，请查阅源码或联系开发者。 
