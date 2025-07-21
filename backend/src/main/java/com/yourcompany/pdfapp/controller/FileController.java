@@ -45,7 +45,10 @@ public class FileController {
     
     @PostMapping("/upload")
     public ResponseEntity<Map<String, Object>> uploadFile(
-            @RequestParam("file") MultipartFile file) {
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "fileName", required = false) String fileName,
+            @RequestParam(value = "fileType", required = false) String fileType,
+            @RequestParam(value = "fileSize", required = false) Long fileSize) {
         
         Map<String, Object> response = new HashMap<>();
         String userId = getCurrentUserId();
@@ -57,7 +60,12 @@ public class FileController {
         }
         
         try {
-            FileEntity savedFile = fileService.saveFile(file, userId);
+            // 兼容小程序：优先使用 formData 中的字段，否则使用 MultipartFile 的属性
+            String finalFileName = (fileName != null && !fileName.isEmpty()) ? fileName : file.getOriginalFilename();
+            String finalFileType = (fileType != null && !fileType.isEmpty()) ? fileType : file.getContentType();
+            Long finalFileSize = (fileSize != null) ? fileSize : file.getSize();
+            
+            FileEntity savedFile = fileService.saveFile(file, userId, finalFileName, finalFileType, finalFileSize);
             
             response.put("success", true);
             response.put("message", "文件上传成功");

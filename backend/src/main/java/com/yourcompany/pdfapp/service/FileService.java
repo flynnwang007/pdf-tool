@@ -73,6 +73,56 @@ public class FileService {
         return savedEntity;
     }
     
+    /**
+     * 兼容小程序上传：支持自定义文件名、类型和大小
+     */
+    public FileEntity saveFile(MultipartFile file, String userId, String customFileName, String customFileType, Long customFileSize) throws IOException {
+        // 验证文件
+        validateFile(file);
+        
+        // 使用自定义文件名或 MultipartFile 的文件名
+        String originalName = (customFileName != null && !customFileName.isEmpty()) ? customFileName : file.getOriginalFilename();
+        String extension = FilenameUtils.getExtension(originalName);
+        String storedName = UUID.randomUUID().toString() + "." + extension;
+        
+        // 确保上传目录存在
+        Path uploadPath = Paths.get(fileProperties.getUploadPath());
+        if (!Files.exists(uploadPath)) {
+            Files.createDirectories(uploadPath);
+        }
+        
+        // 保存文件到磁盘
+        Path filePath = uploadPath.resolve(storedName);
+        Files.copy(file.getInputStream(), filePath);
+        
+        // 计算文件校验和
+        String checksum = calculateChecksum(filePath);
+        
+        // 使用自定义文件类型或 MultipartFile 的文件类型
+        String mimeType = (customFileType != null && !customFileType.isEmpty()) ? customFileType : file.getContentType();
+        
+        // 使用自定义文件大小或 MultipartFile 的文件大小
+        Long fileSize = (customFileSize != null) ? customFileSize : file.getSize();
+        
+        // 创建文件实体
+        FileEntity fileEntity = new FileEntity(
+            userId,
+            originalName,
+            storedName,
+            filePath.toString(),
+            fileSize,
+            getFileType(extension),
+            mimeType,
+            "UPLOAD"
+        );
+        fileEntity.setChecksum(checksum);
+        
+        // 保存到数据库
+        FileEntity savedEntity = fileRepository.save(fileEntity);
+        logger.info("文件已保存 (兼容模式): id={}, name={}, source={}", savedEntity.getId(), savedEntity.getOriginalName(), savedEntity.getSource());
+        return savedEntity;
+    }
+    
     public Optional<FileEntity> getFile(Long fileId) {
         return fileRepository.findById(fileId);
     }
