@@ -135,11 +135,41 @@ npm run build
 
 # 部署前端静态文件到 nginx 目录
 NGINX_STATIC_DIR="/var/www/pdf-tool"
+
+# 备份手动上传的文件
+print_info "备份手动上传的文件..."
+BACKUP_DIR="/tmp/manual_files_backup"
+mkdir -p $BACKUP_DIR
+if [ -f "$NGINX_STATIC_DIR/privacy-policy.html" ]; then
+    cp "$NGINX_STATIC_DIR/privacy-policy.html" "$BACKUP_DIR/"
+fi
+if [ -f "$NGINX_STATIC_DIR/user-agreement.html" ]; then
+    cp "$NGINX_STATIC_DIR/user-agreement.html" "$BACKUP_DIR/"
+fi
+if [ -f "$NGINX_STATIC_DIR/apple-app-site-association" ]; then
+    cp "$NGINX_STATIC_DIR/apple-app-site-association" "$BACKUP_DIR/"
+fi
+
 print_info "清理 nginx 静态目录旧产物..."
 rm -rf $NGINX_STATIC_DIR/*
 
 print_info "拷贝新前端产物到 nginx 静态目录..."
 cp -r dist/* $NGINX_STATIC_DIR/
+
+# 恢复手动上传的文件
+print_info "恢复手动上传的文件..."
+if [ -f "$BACKUP_DIR/privacy-policy.html" ]; then
+    cp "$BACKUP_DIR/privacy-policy.html" "$NGINX_STATIC_DIR/"
+fi
+if [ -f "$BACKUP_DIR/user-agreement.html" ]; then
+    cp "$BACKUP_DIR/user-agreement.html" "$NGINX_STATIC_DIR/"
+fi
+if [ -f "$BACKUP_DIR/apple-app-site-association" ]; then
+    cp "$BACKUP_DIR/apple-app-site-association" "$NGINX_STATIC_DIR/"
+fi
+
+# 清理备份目录
+rm -rf $BACKUP_DIR
 
 print_status "前端构建和部署完成"
 
